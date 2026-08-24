@@ -4,7 +4,7 @@
 ![CI](https://github.com/ORG/REPO/actions/workflows/ci.yml/badge.svg)
 -->
 
-**Student:** [Your Name] · **Course:** CEN 5064 Software Design, Fall 2026 · **Partner:** [@partner-github-username]
+**Student:** [Jai LNU] · **Course:** CEN 5064 Software Design, Fall 2026 · **Partner:** [GoldLion72]
 
 ## Project (approval paragraph — write this by Sun Aug 30)
 
