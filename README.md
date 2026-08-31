@@ -1,3 +1,4 @@
+```markdown
 # PropertyCare
 
 <!-- CI badge will be added after Session 4 when the GitHub Actions workflow is configured.
@@ -11,10 +12,13 @@ PropertyCare is a rental maintenance and work-order management system designed f
 
 ## How to run
 
+
 ```
+
 PropertyCare is currently in the design and initial development stage.
 Exact installation and execution commands will be added when the first
 working version of the application is committed.
+
 ```
 
 ## Architecture
@@ -23,10 +27,10 @@ working version of the application is committed.
 
 | Tier | Responsibilities in THIS system |
 |------|--------------------------------|
-| Presentation | Displays the tenant maintenance-request form, property-manager dashboard, work-order screens, maintenance history, and cost summaries. It collects user input and displays results without implementing business rules. |
-| Service | Coordinates the system's use cases, including registering properties, submitting maintenance requests, assigning repair work, updating work-order status, and generating maintenance summaries. |
-| Domain | Contains the Property, Unit, MaintenanceRequest, and WorkOrder entities and the business rules for request priority, work assignment, repair costs, and valid status changes. |
-| Data | Stores and retrieves properties, units, maintenance requests, work orders, and repair costs through repository classes using a SQLite relational database. |
+| Presentation | Displays role-based views (Tenant Portal, Property Manager Dashboard, Contractor Hub) and handles UI form validation without executing business logic. |
+| Service | Coordinates core use cases and role authorization, managing atomic multi-step operations (such as linking maintenance request updates to work order creation). |
+| Domain | Houses entities (`User`, `Tenant`, `PropertyManager`, `Contractor`, `Property`, `Unit`, `MaintenanceRequest`, `WorkOrder`) and enforces business rules for priorities, cost tracking, and state-machine status lifecycle transitions. |
+| Data | Manages database persistence using abstract repository interfaces to decouple logic, executing queries and aggregate cost summaries against a SQLite database with migration support. |
 
 ### C4 — Context & Container (Session 3 studio)
 
@@ -42,6 +46,7 @@ flowchart TB
     manager -->|manages properties, requests, and work orders| system
     contractor -->|views assigned work and records repair updates| system
     system -->|stores and retrieves property maintenance data| database
+
 ```
 
 ```mermaid
@@ -58,6 +63,7 @@ flowchart TB
         service -->|requests data operations| data
         data -->|reads and writes records| database
     end
+
 ```
 
 ### UML — Class & Sequence (Session 3 studio)
@@ -112,6 +118,7 @@ classDiagram
     Property "1" --> "*" Unit : contains
     Unit "1" --> "*" MaintenanceRequest : receives
     MaintenanceRequest "1" --> "0..1" WorkOrder : produces
+
 ```
 
 ```mermaid
@@ -130,19 +137,24 @@ sequenceDiagram
     D-->>S: Return request ID
     S-->>UI: Return submission confirmation
     UI-->>T: Display request number and status
+
 ```
 
 ## Architecture Decision Records
 
-Decisions live in [`docs/adr/`](docs/adr/). Start with ADR-001 in Session 4.
+Decisions live in [`docs/adr/`](https://www.google.com/search?q=docs/adr/). Start with ADR-001 in Session 4.
 
 | # | Decision | Status |
-|---|----------|--------|
-| [001](docs/adr/adr-001.md) | Build PropertyCare as a rental maintenance and work-order management system | proposed |
+| --- | --- | --- |
+| [001](https://www.google.com/search?q=docs/adr/adr-001.md) | Build PropertyCare as a rental maintenance and work-order management system | proposed |
 
 ## Weekly log (optional but recommended)
 
 A one-line note per week keeps your commit story readable:
 
-- Week 1 (Aug 24): Repository created, three project ideas drafted, PropertyCare selected, and the approval paragraph added.
-- Week 2 (Aug 31): Pending — this entry will be updated after the Session 2 architecture studio.
+* Week 1 (Aug 24): Repository created, three project ideas drafted, PropertyCare selected, and the approval paragraph added.
+* Week 2 (Aug 31): Defined the four-tier architectural breakdown, layer responsibilities, and system boundary definitions during the Session 2 studio.
+
+```
+
+```
