@@ -8,7 +8,7 @@
 
 ## Project (approval paragraph — write this by Sun Aug 30)
 
-PropertyCare is a rental maintenance and work-order management system designed for small landlords, property managers, tenants, and maintenance contractors. The system will allow property managers to register properties and rental units, tenants to submit maintenance requests, managers to review and prioritize requests and assign repair work, and maintenance contractors to update the progress and completion details of assigned work orders. The system will also keep a maintenance history and track estimated and actual repair costs for each property and unit. PropertyCare will use a layered architecture, a SQLite relational database, and a simple Streamlit web interface so that the project remains manageable and achievable within one semester.
+PropertyCare is a rental maintenance and work-order management system designed for small landlords, property managers, tenants, and maintenance contractors. The system will allow property managers to register properties and rental units, tenants to submit maintenance requests with an optional image of the issue and select a priority level of Low, Medium, High, or Critical, managers to review and prioritize requests and assign repair work, and maintenance contractors to update the progress and completion details of assigned work orders. The system will also keep a maintenance history and track estimated and actual repair costs for each property and unit. PropertyCare will use a layered architecture, a SQLite relational database, and a simple Streamlit web interface so that the project remains manageable and achievable within one semester.
 
 ## How to run
 
@@ -28,10 +28,10 @@ application will be added here and tested from a clean clone.
 
 | Tier | Responsibilities in THIS system |
 |------|--------------------------------|
-| Presentation | Displays the tenant maintenance-request form, property-manager dashboard, work-order screens, maintenance history, and repair-cost summaries. It collects user input and displays results without implementing business rules. |
-| Service | Coordinates the system's main use cases, including registering properties and units, submitting maintenance requests, reviewing requests, changing request priority, assigning repair work, updating work-order status, and generating maintenance summaries. |
-| Domain | Contains the main business entities: Property, Unit, MaintenanceRequest, and WorkOrder. It also contains the business rules for request priority, work assignment, repair costs, and valid status changes. |
-| Data | Stores and retrieves properties, units, maintenance requests, work orders, and repair-cost information through repository classes using a SQLite relational database. |
+| Presentation | Displays the tenant maintenance-request form, including issue details, image upload, and priority selection, along with the property-manager dashboard, work-order screens, maintenance history, and repair-cost summaries. It collects user input and displays results without implementing business rules. |
+| Service | Coordinates the system's main use cases, including registering properties and units, submitting maintenance requests with optional images and priority levels, reviewing requests, changing request priority, assigning repair work, updating work-order status, and generating maintenance summaries. |
+| Domain | Contains the main business entities: Property, Unit, MaintenanceRequest, and WorkOrder. It also contains the business rules for request priority levels, work assignment, repair costs, image information, and valid status changes. |
+| Data | Stores and retrieves properties, units, maintenance requests, image references, work orders, and repair-cost information through repository classes using a SQLite relational database. |
 
 ### C4 — Context & Container (Session 3 studio)
 
@@ -45,8 +45,8 @@ flowchart TB
     system[PropertyCare]
     database[(SQLite Database)]
 
-    tenant -->|submits and tracks maintenance requests| system
-    manager -->|manages properties, requests, and work orders| system
+    tenant -->|submits maintenance requests with details, priority, and optional images| system
+    manager -->|manages properties, requests, priorities, and work orders| system
     contractor -->|views assigned work and records repair updates| system
 
     system -->|stores and retrieves property maintenance data| database
@@ -63,8 +63,8 @@ flowchart TB
         data[Repository Layer<br/>Data Tier]
         database[(SQLite Database)]
 
-        ui -->|sends user requests| service
-        service -->|applies use cases| domain
+        ui -->|sends user requests, images, and priority selections| service
+        service -->|applies use cases and validation| domain
         service -->|requests data operations| data
         data -->|reads and writes records| database
 
@@ -101,9 +101,11 @@ classDiagram
         -String category
         -String priority
         -String status
+        -String imagePath
         -Date createdAt
         +changePriority()
         +changeStatus()
+        +addImage()
         +createWorkOrder()
     }
 
@@ -136,17 +138,39 @@ sequenceDiagram
     participant D as Data Repository
 
     T->>UI: Enter unit and maintenance details
+    T->>UI: Select priority level
+    T->>UI: Upload optional issue image
+
     UI->>S: Submit maintenance request
 
-    S->>DM: Validate and create request
+    S->>DM: Validate request, priority, and image
     DM-->>S: Return validated request
 
-    S->>D: Save maintenance request
+    S->>D: Save maintenance request and image reference
     D-->>S: Return request ID
 
     S-->>UI: Return submission confirmation
-    UI-->>T: Display request number and status
+    UI-->>T: Display request number, priority, and status
 ```
+
+## Maintenance Request Priority Levels
+
+Each maintenance request will have one of the following priority levels:
+
+| Priority | Description |
+|----------|-------------|
+| Low | Minor issue that does not require immediate attention. |
+| Medium | Normal maintenance issue that should be handled within a reasonable amount of time. |
+| High | Important issue that may affect the tenant's ability to use part of the property normally. |
+| Critical | Emergency or safety-related issue that requires immediate attention. |
+
+Tenants will be able to select an initial priority while submitting a maintenance request. Property managers will also be able to review and change the priority when necessary.
+
+## Maintenance Request Images
+
+Tenants will have the option to upload an image when submitting a maintenance request. The image can help the property manager and maintenance contractor better understand the reported issue before repair work is assigned.
+
+Uploading an image will be optional so that tenants can still submit a request when an image is not available.
 
 ## Architecture Decision Records
 
@@ -163,3 +187,4 @@ A one-line note per week keeps your commit story readable:
 - Week 1 (Aug 24): Repository created, three project ideas drafted, PropertyCare selected, and the approval paragraph added.
 - Week 2 (Aug 31): Defined the four-tier architecture and documented the responsibilities of the Presentation, Service, Domain, and Data tiers.
 - Week 3 (Sep 7): Created the C4 context and container diagrams, designed the initial UML class diagram, and documented the maintenance-request sequence.
+- Week 4 (Sep 14): Expanded the maintenance-request design by adding optional issue-image uploads and four priority levels: Low, Medium, High, and Critical. Updated the architecture, UML model, and request sequence to support the new features.
