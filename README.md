@@ -188,3 +188,4 @@ A one-line note per week keeps your commit story readable:
 - Week 2 (Aug 31): Defined the four-tier architecture and documented the responsibilities of the Presentation, Service, Domain, and Data tiers.
 - Week 3 (Sep 7): Created the C4 context and container diagrams, designed the initial UML class diagram, and documented the maintenance-request sequence.
 - Week 4 (Sep 14): Expanded the maintenance-request design by adding optional issue-image uploads and four priority levels: Low, Medium, High, and Critical. Updated the architecture, UML model, and request sequence to support the new features.
+- Week 5 (Sep 21): Started the professional GitHub workflow using Issue #1 for the planned user login and owner portal.
