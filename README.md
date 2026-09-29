@@ -12,15 +12,43 @@ PropertyCare is a rental maintenance and work-order management system designed f
 
 ## How to run
 
-```text
-PropertyCare is currently in the design and initial development stage.
+### Requirements
 
-The planned application will use Python, Streamlit, and SQLite.
+- Python 3.10 or newer
+- Current development and tests have been verified using Python 3.13
+- No external Python packages are required for the currently implemented priority model and tests
 
-When the first working version is implemented, the exact commands needed
-to install the dependencies, initialize the database, and run the
-application will be added here and tested from a clean clone.
+### Clone the repository
+
+```bash
+git clone https://github.com/JaiKaushik03/cen5064-project-Jai.git
+cd cen5064-project-Jai
 ```
+
+### Run the current tests
+
+From the project root, run:
+
+```bash
+python -m unittest discover -s tests -v
+```
+
+All current tests should pass.
+
+### Current project status
+
+PropertyCare is still in early development.
+
+The current implementation includes the maintenance-request priority Domain model and its unit tests.
+
+The priority model currently supports:
+
+- Low
+- Medium
+- High
+- Critical
+
+The Streamlit interface, SQLite integration, service layer, and other application features will be implemented in future issues.
 
 ## Architecture
 
@@ -189,3 +217,4 @@ A one-line note per week keeps your commit story readable:
 - Week 3 (Sep 7): Created the C4 context and container diagrams, designed the initial UML class diagram, and documented the maintenance-request sequence.
 - Week 4 (Sep 14): Expanded the maintenance-request design by adding optional issue-image uploads and four priority levels: Low, Medium, High, and Critical. Updated the architecture, UML model, and request sequence to support the new features.
 - Week 5 (Sep 21): Started the professional GitHub workflow using Issue #1 for the planned user login and owner portal.
+- Week 6 (Sep 28): Implemented maintenance-request priority validation in the Domain tier, added unit tests, verified AI-assisted code through the Lecture 4 critique workflow, and incorporated peer-review feedback into the README.
