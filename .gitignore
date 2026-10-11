@@ -26,3 +26,16 @@ Thumbs.db
 # --- Local secrets/config (never commit credentials) ---
 .env
 *.local
+
+# --- PropertyCare generated data ---
+*.db
+*.db-journal
+*.db-wal
+*.db-shm
+*.sqlite
+*.sqlite3
+*.sqlite-journal
+*.sqlite3-journal
+.pytest-tmp/
+.midterm-verification/
+.streamlit/secrets.toml
