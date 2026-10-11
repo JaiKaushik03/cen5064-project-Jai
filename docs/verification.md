@@ -36,9 +36,70 @@ retrieval, new connections, SQL-like text, and the Streamlit form/display/new se
 
 ## Fresh feature-branch verification
 
-Fresh-clone setup and live browser verification are pending in this work session.
-This section will be replaced with executed commands and observed results before
-the new PR is marked ready for partner review.
+A separate clone was created under the original repository's ignored
+`.midterm-verification/partner-review-20261010/` directory. It had its own new
+virtual environment and an initially empty default database. Revision tested:
+`7dfb14554211f35bca8b16e33ee2dcddb1828c36`.
+
+Executed the README Windows Command Prompt setup and test commands:
+
+```bat
+git clone --branch maintenance-request-working-slice --single-branch https://github.com/JaiKaushik03/cen5064-project-Jai.git
+cd cen5064-project-Jai
+py -3.13 -m venv .venv
+.venv\Scripts\activate.bat
+python -m pip install -r requirements.txt
+python -m pip install -r requirements-dev.txt
+python -m pytest -q
+python -m pip check
+python -m streamlit run app.py
+```
+
+Observed results:
+- Runtime and development installations succeeded.
+- Python reported 3.13.7; the fresh environment produced **28 passed, 0 failed**.
+- Dependency checks reported no broken requirements.
+- Streamlit prompted for an onboarding email; pressing Enter skipped it as documented.
+- Streamlit started at http://localhost:8501.
+- The browser initially displayed no requests.
+- Submitting Oak Court / Unit 2B, Fresh clone sink leak, description text, and Critical
+  displayed success and a saved row.
+- Blank title and blank property/unit were each rejected on the real screen.
+- A direct sqlite3 query returned exactly:
+  `[(1, 'Oak Court / Unit 2B', 'Fresh clone sink leak', 'Critical')]`.
+- Submitting Extreme priority directly through the service raised
+  `ValueError: Priority must be one of: Low, Medium, High, Critical.`
+  A new repository connection still loaded exactly one request.
+- Stopped the actual server using Ctrl+C, started it again with the same README
+  command, reloaded the browser, and confirmed the same saved row remained.
+- The optional PowerShell activation command was also executed successfully;
+  the activated interpreter reported Python 3.13.7.
+
+Additional SQLite/service check executed in the fresh clone using
+`.\\.venv\\Scripts\\python.exe -c $verifyScript` with this source:
+
+```python
+from contextlib import closing
+import sqlite3
+from src.data.maintenance_request_repository import MaintenanceRequestRepository
+from src.services.maintenance_request_service import MaintenanceRequestService
+
+with closing(sqlite3.connect("data/propertycare.db")) as connection:
+    rows = connection.execute(
+        "SELECT id, property_unit, title, priority FROM maintenance_requests"
+    ).fetchall()
+assert rows == [(1, "Oak Court / Unit 2B", "Fresh clone sink leak", "Critical")]
+service = MaintenanceRequestService(MaintenanceRequestRepository("data/propertycare.db"))
+try:
+    service.submit("Unit 2B", "Invalid priority check", "", "Extreme")
+except ValueError:
+    pass
+else:
+    raise AssertionError("Invalid priority accepted")
+assert len(service.list_requests()) == 1
+```
+
+These are Codex-observed results. They do not claim student execution or partner acceptance.
 
 ## Review boundary
 
