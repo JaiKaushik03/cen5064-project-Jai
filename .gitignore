@@ -39,3 +39,9 @@ Thumbs.db
 .pytest-tmp/
 .midterm-verification/
 .streamlit/secrets.toml
+
+# SQLite sidecar files for optional database filenames
+*.sqlite-wal
+*.sqlite-shm
+*.sqlite3-wal
+*.sqlite3-shm

@@ -2,7 +2,7 @@
 
 Preserved from the original README. These diagrams and features describe future scope, not the implemented midterm slice. See the root README for the actual application.
 
-## Project (approval paragraph — write this by Sun Aug 30)
+## Original project scope
 
 PropertyCare is a rental maintenance and work-order management system designed for small landlords, property managers, tenants, and maintenance contractors. The system will allow property managers to register properties and rental units, tenants to submit maintenance requests with an optional image of the issue and select a priority level of Low, Medium, High, or Critical, managers to review and prioritize requests and assign repair work, and maintenance contractors to update the progress and completion details of assigned work orders. The system will also keep a maintenance history and track estimated and actual repair costs for each property and unit. PropertyCare will use a layered architecture, a SQLite relational database, and a simple Streamlit web interface so that the project remains manageable and achievable within one semester.
 

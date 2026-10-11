@@ -1,12 +1,17 @@
 # PropertyCare
 
-[![CI](https://github.com/JaiKaushik03/cen5064-project-Jai/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/JaiKaushik03/cen5064-project-Jai/actions/workflows/ci.yml)
+[![CI](https://github.com/JaiKaushik03/cen5064-project-Jai/actions/workflows/ci.yml/badge.svg?branch=maintenance-request-working-slice&event=pull_request)](https://github.com/JaiKaushik03/cen5064-project-Jai/actions/workflows/ci.yml)
 
 **Student:** Jai LNU · **Course:** CEN 5064 Software Design, Fall 2026 · **Partner:** GoldLion72
 
+## Project
+
 PropertyCare is a rental maintenance and work-order project for tenants, property managers, and maintenance contractors. The implemented midterm slice lets a tenant **submit and view a maintenance request**. Requests are validated, stored in SQLite, and displayed again after restarting the application.
 
-## How to run from a clean clone
+## How to run
+
+The working application is on `maintenance-request-working-slice` and awaits partner review.
+Clone that branch using the commands below; unmerged `main` does not yet contain the application.
 
 Requirements: Git, Python **3.13**, and internet access to install dependencies.
 No database server, credentials, environment file, or manual schema setup is needed.
@@ -16,7 +21,7 @@ No database server, credentials, environment file, or manual schema setup is nee
 Use Command Prompt for the following commands. Python's Windows launcher avoids a Microsoft Store `python` alias.
 
 ```bat
-git clone https://github.com/JaiKaushik03/cen5064-project-Jai.git
+git clone --branch maintenance-request-working-slice --single-branch https://github.com/JaiKaushik03/cen5064-project-Jai.git
 cd cen5064-project-Jai
 py -3.13 -m venv .venv
 .venv\Scripts\activate.bat
@@ -26,17 +31,6 @@ python -m streamlit run app.py
 
 If using PowerShell instead, activate with `.\.venv\Scripts\Activate.ps1`.
 If that is blocked by your execution policy, use Command Prompt as above; no policy change is required.
-
-### macOS / Linux
-
-```bash
-git clone https://github.com/JaiKaushik03/cen5064-project-Jai.git
-cd cen5064-project-Jai
-python3.13 -m venv .venv
-source .venv/bin/activate
-python -m pip install -r requirements.txt
-python -m streamlit run app.py
-```
 
 Open **http://localhost:8501**. Streamlit prints the address in the terminal.
 If Streamlit asks for an onboarding email, press Enter to skip it.
@@ -54,7 +48,7 @@ Database files are ignored by Git. An optional `PROPERTYCARE_DB_PATH` environmen
 variable overrides the file location; normal startup needs no environment variables.
 Tests select isolated database files and never use the application's default database.
 
-## Tests
+## How to test
 
 From the repository root, with the virtual environment activated:
 
@@ -69,10 +63,7 @@ blank required fields, saving and reloading records, preservation of existing
 records after rejected submissions, new connections/sessions, and parameterized SQL.
 Test temporary files live in the ignored `.pytest-tmp/` directory.
 
-GitHub Actions uses Python 3.13, installs the same dependencies, and runs the same
-test command for pushes to `main` and pull requests targeting `main`.
-
-## Actual architecture
+## Architecture
 
 | Layer | Implementing files | Responsibility |
 |---|---|---|
@@ -92,7 +83,9 @@ flowchart LR
     S -->|confirmation and saved requests| UI
 ```
 
-**Working slice:** Tenant submits request -> service validates by creating the
+## Working slice
+
+**Flow:** Tenant submits request -> service validates by creating the
 domain model -> SQLite repository saves -> service loads saved requests ->
 Streamlit displays confirmation and the stored record.
 
@@ -101,7 +94,7 @@ using the existing `Priority` enum. Property / Unit and Issue title must contain
 non-whitespace text. Description is optional. Invalid data raises a domain
 validation error before the service calls storage; the UI displays that error.
 
-## Architecture Decision Records
+## ADRs
 
 | Decision | Status |
 |---|---|
@@ -111,7 +104,16 @@ validation error before the service calls storage; the UI displays that error.
 The original ADR template and worked example remain as course references.
 They are not counted as PropertyCare decisions.
 
-## Professor demo (60-90 seconds)
+## CI
+
+[![CI](https://github.com/JaiKaushik03/cen5064-project-Jai/actions/workflows/ci.yml/badge.svg?branch=maintenance-request-working-slice&event=pull_request)](https://github.com/JaiKaushik03/cen5064-project-Jai/actions)
+
+GitHub Actions uses Python 3.13, installs the same dependencies, and runs the same
+test command for pushes to `main` and pull requests targeting `main`.
+The badge above selects the feature branch's pull-request checks.
+The workflow is proposed in the open PR; no green `main` run is claimed before partner review and merge.
+
+## Demo
 
 1. Open http://localhost:8501.
 2. Enter **Oak Court / Unit 2B**, **Leaking kitchen sink**, and **Water pools below the cabinet.** Select **Critical**.
@@ -131,6 +133,19 @@ design are preserved in [the planned full-semester design](docs/planned-design.m
 [Issue #5](https://github.com/JaiKaushik03/cen5064-project-Jai/issues/5) tracks the working slice.
 [PR #4](https://github.com/JaiKaushik03/cen5064-project-Jai/pull/4) documents the original priority rule and AI critique.
 
+## Development and verification
+
+PropertyCare is Jai LNU's CEN 5064 project. Its concept, intended users, layered
+architecture direction, SQLite requirement, workflow requirements, acceptance
+criteria, and review process are student-directed. AI-assisted coding tools
+generated or modified portions of Python code, tests, CI, and technical documentation
+from those instructions and executed the recorded technical checks. Partner review
+and the student's final acceptance are still required; automated checks do not
+establish that the student personally ran them.
+
+[Verification evidence](docs/verification.md) records commands and observed results
+for student and partner review.
+
 ## Weekly log
 
 - Week 1 (Aug 24): Repository created, three project ideas drafted, PropertyCare selected, and the approval paragraph added.
@@ -140,3 +155,5 @@ design are preserved in [the planned full-semester design](docs/planned-design.m
 - Week 5 (Sep 21): Started Issue #1's planned login and owner portal workflow documentation.
 - Week 6 (Sep 28): Implemented Domain priority validation, unit tests, AI critique, and peer-review README feedback.
 - Week of Oct 5 (Oct 10): Implemented the midterm submit-and-view slice, SQLite persistence, interface/integration tests, two real ADRs, CI, and reproducible run instructions.
+
+- Oct 10 follow-up: Re-audited existing work, corrected issue/PR descriptions and attribution, verified feature-branch setup, and added service/storage-boundary checks for partner review.
