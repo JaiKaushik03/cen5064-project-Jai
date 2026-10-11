@@ -1,220 +1,142 @@
 # PropertyCare
 
-<!-- CI badge: after Session 4, replace ORG/REPO and the workflow filename, then uncomment:
-![CI](https://github.com/ORG/REPO/actions/workflows/ci.yml/badge.svg)
--->
+[![CI](https://github.com/JaiKaushik03/cen5064-project-Jai/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/JaiKaushik03/cen5064-project-Jai/actions/workflows/ci.yml)
 
 **Student:** Jai LNU · **Course:** CEN 5064 Software Design, Fall 2026 · **Partner:** GoldLion72
 
-## Project (approval paragraph — write this by Sun Aug 30)
+PropertyCare is a rental maintenance and work-order project for tenants, property managers, and maintenance contractors. The implemented midterm slice lets a tenant **submit and view a maintenance request**. Requests are validated, stored in SQLite, and displayed again after restarting the application.
 
-PropertyCare is a rental maintenance and work-order management system designed for small landlords, property managers, tenants, and maintenance contractors. The system will allow property managers to register properties and rental units, tenants to submit maintenance requests with an optional image of the issue and select a priority level of Low, Medium, High, or Critical, managers to review and prioritize requests and assign repair work, and maintenance contractors to update the progress and completion details of assigned work orders. The system will also keep a maintenance history and track estimated and actual repair costs for each property and unit. PropertyCare will use a layered architecture, a SQLite relational database, and a simple Streamlit web interface so that the project remains manageable and achievable within one semester.
+## How to run from a clean clone
 
-## How to run
+Requirements: Git, Python **3.13**, and internet access to install dependencies.
+No database server, credentials, environment file, or manual schema setup is needed.
 
-### Requirements
+### Windows (Command Prompt)
 
-- Python 3.10 or newer
-- Current development and tests have been verified using Python 3.13
-- No external Python packages are required for the currently implemented priority model and tests
+Use Command Prompt for the following commands. Python's Windows launcher avoids a Microsoft Store `python` alias.
 
-### Clone the repository
+```bat
+git clone https://github.com/JaiKaushik03/cen5064-project-Jai.git
+cd cen5064-project-Jai
+py -3.13 -m venv .venv
+.venv\Scripts\activate.bat
+python -m pip install -r requirements.txt
+python -m streamlit run app.py
+```
+
+If using PowerShell instead, activate with `.\.venv\Scripts\Activate.ps1`.
+If that is blocked by your execution policy, use Command Prompt as above; no policy change is required.
+
+### macOS / Linux
 
 ```bash
 git clone https://github.com/JaiKaushik03/cen5064-project-Jai.git
 cd cen5064-project-Jai
+python3.13 -m venv .venv
+source .venv/bin/activate
+python -m pip install -r requirements.txt
+python -m streamlit run app.py
 ```
 
-### Run the current tests
+Open **http://localhost:8501**. Streamlit prints the address in the terminal.
+If Streamlit asks for an onboarding email, press Enter to skip it.
 
-From the project root, run:
+Stop the server with **Ctrl+C**. Restart with `python -m streamlit run app.py`.
+Saved requests remain in the table.
+
+### Database setup
+
+The first application run automatically creates `data/propertycare.db` and the
+`maintenance_requests` table. Every save commits to disk. The path is relative to
+`app.py`, so restarting from another working directory does not create a second default database.
+
+Database files are ignored by Git. An optional `PROPERTYCARE_DB_PATH` environment
+variable overrides the file location; normal startup needs no environment variables.
+Tests select isolated database files and never use the application's default database.
+
+## Tests
+
+From the repository root, with the virtual environment activated:
 
 ```bash
-python -m unittest discover -s tests -v
+python -m pip install -r requirements-dev.txt
+python -m pytest -q
 ```
 
-All current tests should pass.
+This runs the original priority tests plus domain, service, real SQLite, and
+Streamlit screen tests. It checks all four valid priorities, invalid priority,
+blank required fields, saving and reloading records, preservation of existing
+records after rejected submissions, new connections/sessions, and parameterized SQL.
+Test temporary files live in the ignored `.pytest-tmp/` directory.
 
-### Current project status
+GitHub Actions uses Python 3.13, installs the same dependencies, and runs the same
+test command for pushes to `main` and pull requests targeting `main`.
 
-PropertyCare is still in early development.
+## Actual architecture
 
-The current implementation includes the maintenance-request priority Domain model and its unit tests.
-
-The priority model currently supports:
-
-- Low
-- Medium
-- High
-- Critical
-
-The Streamlit interface, SQLite integration, service layer, and other application features will be implemented in future issues.
-
-## Architecture
-
-### Tier breakdown (Session 2 studio)
-
-| Tier | Responsibilities in THIS system |
-|------|--------------------------------|
-| Presentation | Displays the tenant maintenance-request form, including issue details, image upload, and priority selection, along with the property-manager dashboard, work-order screens, maintenance history, and repair-cost summaries. It collects user input and displays results without implementing business rules. |
-| Service | Coordinates the system's main use cases, including registering properties and units, submitting maintenance requests with optional images and priority levels, reviewing requests, changing request priority, assigning repair work, updating work-order status, and generating maintenance summaries. |
-| Domain | Contains the main business entities: Property, Unit, MaintenanceRequest, and WorkOrder. It also contains the business rules for request priority levels, work assignment, repair costs, image information, and valid status changes. |
-| Data | Stores and retrieves properties, units, maintenance requests, image references, work orders, and repair-cost information through repository classes using a SQLite relational database. |
-
-### C4 — Context & Container (Session 3 studio)
+| Layer | Implementing files | Responsibility |
+|---|---|---|
+| Presentation | `app.py` | Streamlit form, validation messages, and saved-request table; wires the repository and service together. |
+| Service | `src/services/maintenance_request_service.py` | Coordinates submission: constructs the domain object before saving, and loads requests for display. |
+| Domain | `src/domain/maintenance_request.py`, `src/domain/priority.py` | Maintenance request data and validation; no UI or database dependency. |
+| Data | `src/data/maintenance_request_repository.py` | Automatic SQLite setup, parameterized inserts, committed storage, and loading domain objects. |
 
 ```mermaid
-flowchart TB
-
-    tenant([Tenant])
-    manager([Property Manager])
-    contractor([Maintenance Contractor])
-
-    system[PropertyCare]
-    database[(SQLite Database)]
-
-    tenant -->|submits maintenance requests with details, priority, and optional images| system
-    manager -->|manages properties, requests, priorities, and work orders| system
-    contractor -->|views assigned work and records repair updates| system
-
-    system -->|stores and retrieves property maintenance data| database
+flowchart LR
+    UI[Streamlit screen] -->|submit| S[MaintenanceRequestService]
+    S -->|construct and validate| D[MaintenanceRequest + Priority]
+    S -->|save validated request / load requests| R[SQLite repository]
+    R --> DB[(SQLite)]
+    DB --> R
+    R --> S
+    S -->|confirmation and saved requests| UI
 ```
 
-```mermaid
-flowchart TB
+**Working slice:** Tenant submits request -> service validates by creating the
+domain model -> SQLite repository saves -> service loads saved requests ->
+Streamlit displays confirmation and the stored record.
 
-    subgraph PropertyCareSystem [PropertyCare]
-
-        ui[Streamlit Web Interface<br/>Presentation Tier]
-        service[Application Services<br/>Service Tier]
-        domain[Domain Model<br/>Domain Tier]
-        data[Repository Layer<br/>Data Tier]
-        database[(SQLite Database)]
-
-        ui -->|sends user requests, images, and priority selections| service
-        service -->|applies use cases and validation| domain
-        service -->|requests data operations| data
-        data -->|reads and writes records| database
-
-    end
-```
-
-### UML — Class & Sequence (Session 3 studio)
-
-```mermaid
-classDiagram
-
-    class Property {
-        -int id
-        -String name
-        -String address
-        +addUnit()
-        +getMaintenanceHistory()
-    }
-
-    class Unit {
-        -int id
-        -int propertyId
-        -String unitNumber
-        +getOpenRequests()
-        +getMaintenanceHistory()
-    }
-
-    class MaintenanceRequest {
-        -int id
-        -int unitId
-        -String tenantName
-        -String title
-        -String description
-        -String category
-        -String priority
-        -String status
-        -String imagePath
-        -Date createdAt
-        +changePriority()
-        +changeStatus()
-        +addImage()
-        +createWorkOrder()
-    }
-
-    class WorkOrder {
-        -int id
-        -int requestId
-        -String assignedContractor
-        -Date scheduledDate
-        -double estimatedCost
-        -double actualCost
-        -String status
-        -String completionNotes
-        +assignContractor()
-        +startWork()
-        +completeWork()
-    }
-
-    Property "1" --> "*" Unit : contains
-    Unit "1" --> "*" MaintenanceRequest : receives
-    MaintenanceRequest "1" --> "0..1" WorkOrder : produces
-```
-
-```mermaid
-sequenceDiagram
-
-    actor T as Tenant
-    participant UI as PropertyCare UI
-    participant S as Maintenance Request Service
-    participant DM as Domain Model
-    participant D as Data Repository
-
-    T->>UI: Enter unit and maintenance details
-    T->>UI: Select priority level
-    T->>UI: Upload optional issue image
-
-    UI->>S: Submit maintenance request
-
-    S->>DM: Validate request, priority, and image
-    DM-->>S: Return validated request
-
-    S->>D: Save maintenance request and image reference
-    D-->>S: Return request ID
-
-    S-->>UI: Return submission confirmation
-    UI-->>T: Display request number, priority, and status
-```
-
-## Maintenance Request Priority Levels
-
-Each maintenance request will have one of the following priority levels:
-
-| Priority | Description |
-|----------|-------------|
-| Low | Minor issue that does not require immediate attention. |
-| Medium | Normal maintenance issue that should be handled within a reasonable amount of time. |
-| High | Important issue that may affect the tenant's ability to use part of the property normally. |
-| Critical | Emergency or safety-related issue that requires immediate attention. |
-
-Tenants will be able to select an initial priority while submitting a maintenance request. Property managers will also be able to review and change the priority when necessary.
-
-## Maintenance Request Images
-
-Tenants will have the option to upload an image when submitting a maintenance request. The image can help the property manager and maintenance contractor better understand the reported issue before repair work is assigned.
-
-Uploading an image will be optional so that tenants can still submit a request when an image is not available.
+The main rule is that priority must be exactly **Low, Medium, High, or Critical**,
+using the existing `Priority` enum. Property / Unit and Issue title must contain
+non-whitespace text. Description is optional. Invalid data raises a domain
+validation error before the service calls storage; the UI displays that error.
 
 ## Architecture Decision Records
 
-Decisions live in [`docs/adr/`](docs/adr/). Start with ADR-001 in Session 4.
+| Decision | Status |
+|---|---|
+| [ADR 001: Layered Architecture](docs/adr/adr-001-layered-architecture.md) | accepted |
+| [ADR 002: SQLite Persistence](docs/adr/adr-002-sqlite-persistence.md) | accepted |
 
-| # | Decision | Status |
-|---|----------|--------|
-| [001](docs/adr/adr-001.md) | Build PropertyCare as a rental maintenance and work-order management system | proposed |
+The original ADR template and worked example remain as course references.
+They are not counted as PropertyCare decisions.
 
-## Weekly log (optional but recommended)
+## Professor demo (60-90 seconds)
 
-A one-line note per week keeps your commit story readable:
+1. Open http://localhost:8501.
+2. Enter **Oak Court / Unit 2B**, **Leaking kitchen sink**, and **Water pools below the cabinet.** Select **Critical**.
+3. Click **Submit request**. Show the success message and matching row in **Saved maintenance requests**.
+4. Stop the server with Ctrl+C, restart with `python -m streamlit run app.py`, and refresh the browser. Show that the row remains.
+5. Leave Issue title blank and click **Submit request**. Show the validation message and that the saved-request count does not increase.
+6. Show the README layer table and green CI badge; briefly show the passing test result.
+
+## Semester scope and future work
+
+The broader design includes registered properties and units, login and role-based
+owner access, optional request images, work orders, assignment, status updates,
+maintenance history, and repair costs. These features are planned and are **not**
+implemented in this midterm slice. The original C4/UML diagrams and priority/image
+design are preserved in [the planned full-semester design](docs/planned-design.md).
+
+[Issue #5](https://github.com/JaiKaushik03/cen5064-project-Jai/issues/5) tracks the working slice.
+[PR #4](https://github.com/JaiKaushik03/cen5064-project-Jai/pull/4) documents the original priority rule and AI critique.
+
+## Weekly log
 
 - Week 1 (Aug 24): Repository created, three project ideas drafted, PropertyCare selected, and the approval paragraph added.
-- Week 2 (Aug 31): Defined the four-tier architecture and documented the responsibilities of the Presentation, Service, Domain, and Data tiers.
-- Week 3 (Sep 7): Created the C4 context and container diagrams, designed the initial UML class diagram, and documented the maintenance-request sequence.
-- Week 4 (Sep 14): Expanded the maintenance-request design by adding optional issue-image uploads and four priority levels: Low, Medium, High, and Critical. Updated the architecture, UML model, and request sequence to support the new features.
-- Week 5 (Sep 21): Started the professional GitHub workflow using Issue #1 for the planned user login and owner portal.
-- Week 6 (Sep 28): Implemented maintenance-request priority validation in the Domain tier, added unit tests, verified AI-assisted code through the Lecture 4 critique workflow, and incorporated peer-review feedback into the README.
+- Week 2 (Aug 31): Defined the four-tier architecture and its responsibilities.
+- Week 3 (Sep 7): Created C4 diagrams, the initial UML class diagram, and the maintenance-request sequence.
+- Week 4 (Sep 14): Expanded the planned design with optional images and four priority levels.
+- Week 5 (Sep 21): Started Issue #1's planned login and owner portal workflow documentation.
+- Week 6 (Sep 28): Implemented Domain priority validation, unit tests, AI critique, and peer-review README feedback.
+- Week of Oct 5 (Oct 10): Implemented the midterm submit-and-view slice, SQLite persistence, interface/integration tests, two real ADRs, CI, and reproducible run instructions.
