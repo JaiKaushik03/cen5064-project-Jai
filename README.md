@@ -6,47 +6,30 @@
 
 ## Project
 
-PropertyCare is a rental maintenance and work-order project for tenants, property managers, and maintenance contractors. The implemented midterm slice lets a tenant **submit and view a maintenance request**. Requests are validated, stored in SQLite, and displayed again after restarting the application.
+PropertyCare is a rental maintenance and work-order project for tenants, property managers, and maintenance contractors. The current working feature lets a tenant submit and view a maintenance request. Requests are validated, stored in SQLite, and displayed again after restarting the application.
 
 ## How to run
 
-The working application is on `maintenance-request-working-slice` and awaits partner review.
-Clone that branch using the commands below; unmerged `main` does not yet contain the application.
-
-Requirements: Git, Python **3.13**, and internet access to install dependencies.
-No database server, credentials, environment file, or manual schema setup is needed.
-
-### Windows (Command Prompt)
-
-Use Command Prompt for the following commands. Python's Windows launcher avoids a Microsoft Store `python` alias.
+Requirements: Git and Python **3.13**. Run these commands in Windows Command Prompt to clone and start the current feature branch:
 
 ```bat
-git clone --branch maintenance-request-working-slice --single-branch https://github.com/JaiKaushik03/cen5064-project-Jai.git
+git clone --branch maintenance-request-working-slice https://github.com/JaiKaushik03/cen5064-project-Jai.git
 cd cen5064-project-Jai
 py -3.13 -m venv .venv
-.venv\Scripts\activate.bat
+.venv\Scripts\activate
 python -m pip install -r requirements.txt
 python -m streamlit run app.py
 ```
 
-If using PowerShell instead, activate with `.\.venv\Scripts\Activate.ps1`.
-If that is blocked by your execution policy, use Command Prompt as above; no policy change is required.
+Open **http://localhost:8501** while the server is running. If Streamlit asks for an onboarding email, press Enter to skip it. Stop with **Ctrl+C** and restart with the same Streamlit command.
 
-Open **http://localhost:8501**. Streamlit prints the address in the terminal.
-If Streamlit asks for an onboarding email, press Enter to skip it.
-
-Stop the server with **Ctrl+C**. Restart with `python -m streamlit run app.py`.
-Saved requests remain in the table.
+For PowerShell, activate with `.\.venv\Scripts\Activate.ps1`; use Command Prompt if execution policy blocks activation.
 
 ### Database setup
 
-The first application run automatically creates `data/propertycare.db` and the
-`maintenance_requests` table. Every save commits to disk. The path is relative to
-`app.py`, so restarting from another working directory does not create a second default database.
+The first run creates `data/propertycare.db` and its table automatically; no database server, credentials, or schema commands are needed. Requests remain after restarting. The default database path is relative to `app.py`.
 
-Database files are ignored by Git. An optional `PROPERTYCARE_DB_PATH` environment
-variable overrides the file location; normal startup needs no environment variables.
-Tests select isolated database files and never use the application's default database.
+Database files are ignored by Git. Optional `PROPERTYCARE_DB_PATH` selects another file; tests use isolated databases.
 
 ## How to test
 
@@ -57,11 +40,7 @@ python -m pip install -r requirements-dev.txt
 python -m pytest -q
 ```
 
-This runs the original priority tests plus domain, service, real SQLite, and
-Streamlit screen tests. It checks all four valid priorities, invalid priority,
-blank required fields, saving and reloading records, preservation of existing
-records after rejected submissions, new connections/sessions, and parameterized SQL.
-Test temporary files live in the ignored `.pytest-tmp/` directory.
+Tests cover priority rules, required fields, validation before saving, SQLite save/load and persistence, and the Streamlit screen flow.
 
 ## Architecture
 
@@ -83,7 +62,7 @@ flowchart LR
     S -->|confirmation and saved requests| UI
 ```
 
-## Working slice
+## Maintenance request workflow
 
 **Flow:** Tenant submits request -> service validates by creating the
 domain model -> SQLite repository saves -> service loads saved requests ->
@@ -106,12 +85,7 @@ They are not counted as PropertyCare decisions.
 
 ## CI
 
-[![CI](https://github.com/JaiKaushik03/cen5064-project-Jai/actions/workflows/ci.yml/badge.svg?branch=maintenance-request-working-slice&event=pull_request)](https://github.com/JaiKaushik03/cen5064-project-Jai/actions)
-
-GitHub Actions uses Python 3.13, installs the same dependencies, and runs the same
-test command for pushes to `main` and pull requests targeting `main`.
-The badge above selects the feature branch's pull-request checks.
-The workflow is proposed in the open PR; no green `main` run is claimed before partner review and merge.
+GitHub Actions uses Python 3.13 and runs `python -m pytest -q` for pushes to `main` and pull requests targeting `main`. The badge at the top shows checks for `maintenance-request-working-slice`.
 
 ## Demo
 
@@ -127,24 +101,15 @@ The workflow is proposed in the open PR; no green `main` run is claimed before p
 The broader design includes registered properties and units, login and role-based
 owner access, optional request images, work orders, assignment, status updates,
 maintenance history, and repair costs. These features are planned and are **not**
-implemented in this midterm slice. The original C4/UML diagrams and priority/image
+implemented in the current application. The original C4/UML diagrams and priority/image
 design are preserved in [the planned full-semester design](docs/planned-design.md).
 
-[Issue #5](https://github.com/JaiKaushik03/cen5064-project-Jai/issues/5) tracks the working slice.
+[Issue #5](https://github.com/JaiKaushik03/cen5064-project-Jai/issues/5) tracks the maintenance request workflow.
 [PR #4](https://github.com/JaiKaushik03/cen5064-project-Jai/pull/4) documents the original priority rule and AI critique.
 
 ## Development and verification
 
-PropertyCare is Jai LNU's CEN 5064 project. Its concept, intended users, layered
-architecture direction, SQLite requirement, workflow requirements, acceptance
-criteria, and review process are student-directed. AI-assisted coding tools
-generated or modified portions of Python code, tests, CI, and technical documentation
-from those instructions and executed the recorded technical checks. Partner review
-and the student's final acceptance are still required; automated checks do not
-establish that the student personally ran them.
-
-[Verification evidence](docs/verification.md) records commands and observed results
-for student and partner review.
+Jai LNU owns and directs PropertyCare's scope, requirements, architecture, and acceptance criteria. AI-assisted tools contributed portions of the code, tests, CI, and technical documentation. [Verification evidence](docs/verification.md) records checks and observed results.
 
 ## Weekly log
 
@@ -154,6 +119,6 @@ for student and partner review.
 - Week 4 (Sep 14): Expanded the planned design with optional images and four priority levels.
 - Week 5 (Sep 21): Started Issue #1's planned login and owner portal workflow documentation.
 - Week 6 (Sep 28): Implemented Domain priority validation, unit tests, AI critique, and peer-review README feedback.
-- Week of Oct 5 (Oct 10): Implemented the midterm submit-and-view slice, SQLite persistence, interface/integration tests, two real ADRs, CI, and reproducible run instructions.
+- Week of Oct 5 (Oct 10): Implemented the submit-and-view workflow, SQLite persistence, interface/integration tests, two real ADRs, CI, and reproducible run instructions.
 
 - Oct 10 follow-up: Re-audited existing work, corrected issue/PR descriptions and attribution, verified feature-branch setup, and added service/storage-boundary checks for partner review.
