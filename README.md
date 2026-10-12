@@ -1,6 +1,6 @@
 # PropertyCare
 
-[![CI](https://github.com/JaiKaushik03/cen5064-project-Jai/actions/workflows/ci.yml/badge.svg?branch=maintenance-request-working-slice&event=pull_request)](https://github.com/JaiKaushik03/cen5064-project-Jai/actions/workflows/ci.yml)
+[![CI](https://github.com/JaiKaushik03/cen5064-project-Jai/actions/workflows/ci.yml/badge.svg?branch=main&event=push)](https://github.com/JaiKaushik03/cen5064-project-Jai/actions/workflows/ci.yml)
 
 **Student:** Jai LNU · **Course:** CEN 5064 Software Design, Fall 2026 · **Partner:** GoldLion72
 
@@ -10,10 +10,10 @@ PropertyCare is a rental maintenance and work-order project for tenants, propert
 
 ## How to run
 
-Requirements: Git and Python **3.13**. Run these commands in Windows Command Prompt to clone and start the current feature branch:
+Requirements: Git and Python **3.13**. Run these commands in Windows Command Prompt to clone and start PropertyCare:
 
 ```bat
-git clone --branch maintenance-request-working-slice https://github.com/JaiKaushik03/cen5064-project-Jai.git
+git clone https://github.com/JaiKaushik03/cen5064-project-Jai.git
 cd cen5064-project-Jai
 py -3.13 -m venv .venv
 .venv\Scripts\activate
@@ -87,7 +87,7 @@ They are not counted as PropertyCare decisions.
 
 ## CI
 
-GitHub Actions uses Python 3.13 and runs `python -m pytest -q` for pushes to `main` and pull requests targeting `main`. The badge at the top shows checks for `maintenance-request-working-slice`.
+GitHub Actions uses Python 3.13 and runs `python -m pytest -q` for pushes to `main` and pull requests targeting `main`. The badge at the top shows CI for pushes to `main`.
 
 ## Demo
 
@@ -95,7 +95,7 @@ GitHub Actions uses Python 3.13 and runs `python -m pytest -q` for pushes to `ma
 2. Enter **Oak Court / Unit 2B**, **Leaking kitchen sink**, and **Water pools below the cabinet.** Select **Critical**.
 3. Click **Submit request**. Show the success message and matching row in **Saved maintenance requests**.
 4. Stop the server with Ctrl+C, restart with `python -m streamlit run app.py`, and refresh the browser. Show that the row remains.
-5. Leave Issue title blank and click **Submit request**. Show the validation message and that the saved-request count does not increase.
+5. Enter **Oak Court / Unit 2B**, leave Issue title blank, and click **Submit request**. Show the validation message and that the saved-request count does not increase.
 6. Show the README layer table and green CI badge; briefly show the passing test result.
 
 ## Semester scope and future work
