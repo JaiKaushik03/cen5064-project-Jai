@@ -10,6 +10,31 @@ from src.domain.priority import Priority
 from src.services.maintenance_request_service import MaintenanceRequestService
 
 
+DEFAULT_PRIORITY = Priority.MEDIUM
+
+
+def submit_request(service):
+    """Save submitted state; reset widgets only after a successful save."""
+    st.session_state.pop("submission_success", None)
+    st.session_state.pop("submission_error", None)
+    try:
+        saved = service.submit(
+            st.session_state["property_unit"],
+            st.session_state["title"],
+            st.session_state["description"],
+            st.session_state["priority"],
+        )
+    except ValueError as error:
+        st.session_state["submission_error"] = str(error)
+    else:
+        # Callbacks run before widgets are rendered on the next rerun.
+        st.session_state["property_unit"] = ""
+        st.session_state["title"] = ""
+        st.session_state["description"] = ""
+        st.session_state["priority"] = DEFAULT_PRIORITY.value
+        st.session_state["submission_success"] = f"Request #{saved.id} saved successfully."
+
+
 def main():
     st.set_page_config(page_title="PropertyCare", page_icon="🏠", layout="centered")
     st.title("PropertyCare")
@@ -24,24 +49,26 @@ def main():
     service = MaintenanceRequestService(MaintenanceRequestRepository(database_path))
 
     st.subheader("Submit a maintenance request")
+    st.caption("Fields marked * are required. Description is optional.")
     with st.form("maintenance_request"):
-        property_unit = st.text_input(
-            "Property / Unit", placeholder="Oak Court / Unit 2B", key="property_unit"
+        st.text_input(
+            "Property / Unit *", placeholder="Oak Court / Unit 2B", key="property_unit"
         )
-        title = st.text_input("Issue title", placeholder="Leaking kitchen sink", key="title")
-        description = st.text_area("Description", key="description")
-        priority = st.selectbox(
-            "Priority", [item.value for item in Priority], index=1, key="priority"
+        st.text_input("Issue title *", placeholder="Leaking kitchen sink", key="title")
+        st.text_area("Description (optional)", key="description")
+        priority_options = [item.value for item in Priority]
+        st.selectbox(
+            "Priority *",
+            priority_options,
+            index=priority_options.index(DEFAULT_PRIORITY.value),
+            key="priority",
         )
-        submitted = st.form_submit_button("Submit request")
+        st.form_submit_button("Submit request", on_click=submit_request, args=(service,))
 
-    if submitted:
-        try:
-            saved = service.submit(property_unit, title, description, priority)
-        except ValueError as error:
-            st.error(str(error))
-        else:
-            st.success(f"Request #{saved.id} saved successfully.")
+    if st.session_state.get("submission_error"):
+        st.error(st.session_state["submission_error"])
+    if st.session_state.get("submission_success"):
+        st.success(st.session_state["submission_success"])
 
     st.subheader("Saved maintenance requests")
     st.button("Refresh saved requests")

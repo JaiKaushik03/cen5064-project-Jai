@@ -73,6 +73,8 @@ using the existing `Priority` enum. Property / Unit and Issue title must contain
 non-whitespace text. Description is optional. Invalid data raises a domain
 validation error before the service calls storage; the UI displays that error.
 
+Fields marked * are required. After a successful save, the text fields clear and priority resets to Medium; the confirmation and saved request remain visible. Validation errors preserve entered values.
+
 ## ADRs
 
 | Decision | Status |
