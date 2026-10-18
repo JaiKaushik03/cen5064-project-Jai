@@ -21,7 +21,7 @@ python -m pip install -r requirements.txt
 python -m streamlit run app.py
 ```
 
-To try the October 18 implementation while its Draft PR is awaiting review, run `git switch feature/manager-priority-update` after entering the cloned repository, before starting the app. The clone command otherwise checks out `main`.
+To try the October 18 implementation while PR #9 is still unmerged, run `git switch feature/manager-priority-update` after entering the cloned repository, before starting the app. The clone command otherwise checks out `main`.
 
 Open **http://localhost:8501** while the server is running. If Streamlit asks for an onboarding email, press Enter to skip it. Stop with **Ctrl+C** and restart with the same Streamlit command.
 
@@ -48,7 +48,7 @@ python -m pip install -r requirements-dev.txt
 python -m pytest -q
 ```
 
-Tests cover priority and status rules, required fields, validation before storage, SQLite persistence, migration, and both Streamlit forms. The full suite contains **69 tests**. All existing submission/reset/validation tests are retained.
+Tests cover priority and status rules, required fields, validation before storage, SQLite persistence, migration, and the Streamlit submission form and manager controls. The full suite contains **75 tests**. All existing submission/reset/validation tests are retained.
 
 Run the professor's two required service/SQLite cases separately with:
 
@@ -62,7 +62,7 @@ The allowed case saves an Open request, changes Medium to High, checks every sto
 
 | Layer | Implementing files | Responsibility |
 |---|---|---|
-| Presentation | `app.py` | Submission and manager forms, callback/session-state handling, feedback, and saved table; calls the service and wires dependencies. |
+| Presentation | `app.py` | Submission form and manager controls, callback/session-state handling, feedback, and saved table; calls the service and wires dependencies. |
 | Service | `src/services/maintenance_request_service.py` | Coordinates retrieval, Domain validation, and persistence; handles missing IDs and returns results. |
 | Domain | `src/domain/maintenance_request.py`, `src/domain/priority.py`, `src/domain/request_status.py` | Frozen request model, required fields, priority/status enums, and the Completed priority-change restriction; no UI or database dependency. |
 | Data | `src/data/maintenance_request_repository.py` | SQLite migration, parameterized insert/lookup/update, transactions and connection cleanup; loads domain objects and updates only priority. |
@@ -103,11 +103,11 @@ To use the interface:
 
 1. Submit a request or use an existing saved request. The table shows its ID, priority, and status.
 2. In **Manager - Change Request Priority**, select the request by ID/title/property.
-3. Choose **New priority** and click **Update Priority**.
+3. **New priority** starts at the selected request's saved priority. Selecting another request immediately loads its current priority without saving a change. Choose the desired priority and click **Update Priority**.
 4. For an Open request, the app displays success and reloads the saved table with the new priority. The same ID, details, timestamp, and status remain.
 5. For a Completed request, the app displays the Domain validation error. Its priority stays unchanged and the manager's selection is preserved. A missing/deleted request produces a clear error.
 
-Priority dropdowns start at Medium, with their initial/reset values managed through session state. Callbacks run before the next screen render; there are no widget-state writes after rendering. Completed fixtures are exercised in automated tests; this demo does not provide a completion button.
+The submission Priority starts at Medium and resets to Medium after a successful save. The manager's New priority starts at the selected request's current value. Session state supplies these values; an unrelated rerun or failed update keeps the proposed manager value for the same request. Update callbacks run before the next screen render. Dependent widget state is assigned before that widget is rendered. Completed fixtures are exercised in automated tests; this demo does not provide a completion button.
 
 ## ADRs
 
@@ -147,7 +147,9 @@ design are preserved in [the planned full-semester design](docs/planned-design.m
 
 ## Development and verification
 
-Jai LNU owns and directs PropertyCare's scope, requirements, architecture, and acceptance criteria. AI-assisted tools contributed portions of the code, tests, CI, and technical documentation. [Verification evidence](docs/verification.md) records checks and observed results.
+Jai LNU set the project direction, provided the requirements and professor feedback, and defined the acceptance criteria. Codex performed most of the coding, including the Domain changes, service coordination, SQLite migration, Streamlit interface, automated tests, and implementation documentation. Codex also ran the technical checks recorded in [the verification notes](docs/verification.md); these results do not claim that Jai personally ran those checks or wrote every line.
+
+GoldLion72 reviewed the priority-change implementation in [PR #9](https://github.com/JaiKaushik03/cen5064-project-Jai/pull/9#pullrequestreview-5564434492). Their feedback led to matching New priority to the selected request's current value. Their suggestion for a completion UI is recorded in [Issue #10](https://github.com/JaiKaushik03/cen5064-project-Jai/issues/10), since that workflow is outside this priority-change assignment. The review was submitted as comments; the PR records its review and approval status.
 
 ## Weekly log
 
@@ -161,4 +163,6 @@ Jai LNU owns and directs PropertyCare's scope, requirements, architecture, and a
 
 - Oct 10 follow-up: Re-audited existing work, corrected issue/PR descriptions and attribution, verified feature-branch setup, and added service/storage-boundary checks for partner review.
 
-- Oct 18: Added manager priority updates, Domain-owned Completed restriction, minimal request status, safe SQLite migration, and regression coverage. Local suite: 69 passed, 0 failed. Verified both real browser workflows and restart persistence against an isolated legacy database; implementation awaits peer review in a Draft PR.
+- Oct 18: Added manager priority updates, Domain-owned Completed restriction, minimal request status, safe SQLite migration, and regression coverage. Local suite: 69 passed, 0 failed. Verified both real browser workflows and restart persistence against an isolated legacy database; the initial implementation was handed off as a Draft PR before peer review.
+
+- Oct 18 partner-review follow-up: Matched the manager priority default to the selected request, added selection/rerun regression tests, clarified contribution credit, and recorded the completion UI as future Issue #10. The updated commit requires partner re-review before merge.

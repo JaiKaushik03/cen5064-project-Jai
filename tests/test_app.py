@@ -117,13 +117,13 @@ def test_screen_second_submission_uses_new_inputs_after_reset(app):
         ]
 
 
-def seed_manager_request(path, status="Open"):
+def seed_manager_request(path, status="Open", priority="Medium"):
     from src.data.maintenance_request_repository import MaintenanceRequestRepository
     from src.domain.maintenance_request import MaintenanceRequest
 
     return MaintenanceRequestRepository(path).save(
         MaintenanceRequest(
-            "Unit 3", "Manager test leak", "Keep these details", "Medium", status=status
+            "Unit 3", "Manager test leak", "Keep these details", priority, status=status
         )
     )
 
@@ -198,3 +198,74 @@ def test_screen_manager_handles_deleted_selection_and_clears_previous_success(ap
     assert not screen.success
     assert not screen.table
     assert all(button.label != "Update Priority" for button in screen.button)
+
+
+@pytest.mark.parametrize("priority", ["Low", "Medium", "High", "Critical"])
+def test_manager_default_matches_selected_saved_priority(app, priority):
+    from src.data.maintenance_request_repository import MaintenanceRequestRepository
+
+    screen, path = app
+    saved = seed_manager_request(path, priority=priority)
+    repository = MaintenanceRequestRepository(path)
+    screen.run()
+
+    assert not screen.exception
+    assert screen.selectbox(key="manager_request_id").value == saved.id
+    assert screen.selectbox(key="manager_priority").value == priority
+    assert screen.selectbox(key="priority").value == "Medium"
+    assert repository.get_by_id(saved.id).priority.value == priority
+
+
+def test_switching_manager_request_loads_current_priority_without_saving(app):
+    from src.data.maintenance_request_repository import MaintenanceRequestRepository
+    from src.domain.maintenance_request import MaintenanceRequest
+
+    screen, path = app
+    repository = MaintenanceRequestRepository(path)
+    low = repository.save(MaintenanceRequest("Unit 1", "Low leak", "", "Low"))
+    critical = repository.save(
+        MaintenanceRequest("Unit 2", "Critical leak", "", "Critical")
+    )
+    screen.run()
+    assert screen.selectbox(key="manager_priority").value == "Critical"
+
+    # An unsaved proposal stays put on an unrelated rerun for the same request.
+    screen.selectbox(key="manager_priority").set_value("High").run()
+    screen.button[1].click().run()
+    assert not screen.exception
+    assert screen.selectbox(key="manager_priority").value == "High"
+    assert repository.get_by_id(critical.id) == critical
+
+    # Selection alone reruns; its dependent dropdown changes before Update is clicked.
+    screen.selectbox(key="manager_request_id").set_value(low.id).run()
+    assert not screen.exception
+    assert screen.selectbox(key="manager_priority").value == "Low"
+    screen.selectbox(key="manager_request_id").set_value(critical.id).run()
+    assert not screen.exception
+    assert screen.selectbox(key="manager_priority").value == "Critical"
+    assert repository.list_all() == [critical, low]
+
+    # Updating after a switch persists only the selected request.
+    screen.selectbox(key="manager_request_id").set_value(low.id).run()
+    screen.selectbox(key="manager_priority").set_value("High")
+    update_priority_button(screen).click().run()
+    assert not screen.exception
+    assert screen.success[0].value == f"Request #{low.id} priority updated to High."
+    assert repository.get_by_id(low.id).priority.value == "High"
+    assert repository.get_by_id(critical.id) == critical
+
+
+def test_completed_selection_uses_saved_priority_and_preserves_rejected_proposal(app):
+    from src.data.maintenance_request_repository import MaintenanceRequestRepository
+
+    screen, path = app
+    saved = seed_manager_request(path, status="Completed", priority="Low")
+    repository = MaintenanceRequestRepository(path)
+    screen.run()
+    assert screen.selectbox(key="manager_priority").value == "Low"
+    screen.selectbox(key="manager_priority").set_value("High")
+    update_priority_button(screen).click().run()
+    assert not screen.exception
+    assert "Completed maintenance requests cannot" in screen.error[0].value
+    assert screen.selectbox(key="manager_priority").value == "High"
+    assert repository.get_by_id(saved.id) == saved

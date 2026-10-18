@@ -4,7 +4,7 @@ These checks were executed by Codex as AI-assisted technical verification.
 They provide evidence for the student and partner to review; they do not claim
 student execution, partner approval, or final acceptance.
 
-The original sections below record the October 10 snapshot. They are historical; the October 18 section records the current implementation.
+These notes are chronological. The October 10 audit and initial October 18 implementation are historical snapshots; the final section records the partner-review follow-up.
 
 ## Existing implementation audit
 
@@ -173,7 +173,72 @@ The manager controls are a demonstration, without authentication or role authori
 Open/Completed is the minimal state model needed for the rule; a status-change
 workflow, assignment, and contractor features are not implemented.
 
-These are AI-assisted technical verification results, not peer review or student
-execution. The implementation is intended for a **Draft PR**. No reviewer is
-requested, no review is submitted or approved, and no merge is authorized in this task.
-GitHub Actions evidence is reported with the PR after the branch is pushed.
+These initial implementation results were AI-assisted technical verification,
+not peer review or student execution. At that handoff, the PR was Draft and Codex
+stopped before peer review. Codex did not request, submit, or approve a review or
+merge the PR. The later partner review is recorded below.
+GitHub Actions evidence for each tested commit is recorded in the PR.
+
+
+## October 18: partner-review follow-up for PR #9
+
+### Review verified on GitHub
+
+GoldLion72 submitted a **COMMENTED** review of commit
+`76bca39894ce3bc8ddb2ad2ccb6b6fb9c7807c69` on October 18. It was not an APPROVED
+or CHANGES_REQUESTED review. The
+[review](https://github.com/JaiKaushik03/cen5064-project-Jai/pull/9#pullrequestreview-5564434492)
+supported the Domain placement and passing tests, then recommended two improvements:
+
+- Make New priority match the selected request's saved priority.
+- Address a completion UI in future work if it falls outside this assignment.
+
+All PR discussion entries and review threads were read. There were no inline
+review threads to resolve. No review was submitted or approved by Codex.
+
+### Corrections and contribution credit
+
+The request selector and manager priority control now use normal Streamlit reruns
+outside the submission form. A request-ID marker synchronizes the dependent
+priority only when selection changes, before its widget is rendered. Selecting
+a request does not write to storage. An unrelated rerun keeps an unsaved proposal
+for the same request; a failed update preserves that proposal. Update Priority
+still calls Service and the Domain method before persistence.
+
+The original request-submission form and its Medium default/reset remain intact.
+Domain, Service, SQLite migration, and repository implementation are unchanged
+by this follow-up.
+
+The completion UI is recorded as planned work in
+[Issue #10](https://github.com/JaiKaushik03/cen5064-project-Jai/issues/10).
+The assignment explicitly allowed Completed fixtures without a completion UI, so
+no status-management subsystem was added to this PR.
+
+README credit now states that Jai directed the requirements, professor feedback,
+and acceptance criteria; Codex performed most of the coding, automated tests,
+implementation documentation, and technical verification; and GoldLion72 provided
+the recorded peer feedback. It does not attribute Codex execution to the student
+or treat a GitHub commit author as proof of who wrote every line.
+
+### Verification actually performed
+
+- Baseline before this follow-up: **69 passed, 0 failed** in the project's virtual environment.
+- Updated complete suite: **75 passed, 0 failed**. All 69 prior cases are retained.
+- Six added cases check the four saved priority defaults, request switching without persistence, preservation of an unsaved proposal across refresh, correct selected-record updates, and Completed rejection with the proposed value retained.
+- `python -m pip check`: no broken requirements. `git diff --check`: passed.
+- Started Streamlit on loopback port 8503 with an isolated database at `.midterm-verification/pr9-review-followup-20261018/manual.db`.
+- The real browser initially selected a Completed Low fixture with New priority Low. Switching to the Critical request immediately loaded Critical; switching to the Low request loaded Low without clicking Update.
+- Changed the Open Low fixture to High and saw the saved table update. Proposing High for the Completed Low fixture showed the Domain error and retained proposed High; the saved row stayed Low/Completed.
+- Submitted a valid new request and observed cleared text fields, Medium submission priority, success, and the saved row. Submitted a blank title with other text entered and observed the normal error, retained inputs, and no extra row.
+- Direct SQLite assertions confirmed exact original fixture fields except the intended priority change, and confirmed the Completed and unselected Critical fixtures were unchanged.
+- The normal `data/propertycare.db` was not opened or migrated for the checks; its SHA-256 remained unchanged.
+- The server was stopped after verification and produced no widget-state error/warning output.
+
+### Stopping point
+
+These corrections will be committed and pushed to the existing feature branch.
+The new commit needs partner re-review: the existing review comments refer to
+the earlier implementation, and no formal approval has been recorded.
+Latest-head CI and review state are reported in the PR description.
+No reviewer is requested automatically, no review is submitted or approved,
+the PR remains Draft, and no merge or branch deletion is performed.

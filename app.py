@@ -123,28 +123,29 @@ def main():
     if requests:
         requests_by_id = {request.id: request for request in requests}
 
-        st.session_state.setdefault("manager_priority", DEFAULT_PRIORITY.value)
-
         def request_label(request_id):
             request = requests_by_id[request_id]
             return f"#{request.id}: {request.title} ({request.property_unit})"
 
         st.caption("Current priorities and statuses are shown in the saved requests table.")
-        with st.form("manager_priority_change"):
-            st.selectbox(
-                "Request *",
-                list(requests_by_id),
-                format_func=request_label,
-                key="manager_request_id",
-            )
-            st.selectbox(
-                "New priority *",
-                priority_options,
-                key="manager_priority",
-            )
-            st.form_submit_button(
-                "Update Priority", on_click=change_request_priority, args=(service,)
-            )
+        # Selection reruns immediately so the dependent dropdown starts at the saved priority.
+        request_id = st.selectbox(
+            "Request *",
+            list(requests_by_id),
+            format_func=request_label,
+            key="manager_request_id",
+        )
+        if st.session_state.get("manager_priority_request_id") != request_id:
+            # Set state before rendering its widget, only when selecting another request.
+            st.session_state["manager_priority"] = requests_by_id[request_id].priority.value
+            st.session_state["manager_priority_request_id"] = request_id
+
+        st.selectbox(
+            "New priority *",
+            priority_options,
+            key="manager_priority",
+        )
+        st.button("Update Priority", on_click=change_request_priority, args=(service,))
     else:
         st.info("Submit a request before changing its priority.")
 
