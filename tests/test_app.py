@@ -115,3 +115,86 @@ def test_screen_second_submission_uses_new_inputs_after_reset(app):
             ("First leak", "First details", "Critical"),
             ("Second leak", "", "Medium"),
         ]
+
+
+def seed_manager_request(path, status="Open"):
+    from src.data.maintenance_request_repository import MaintenanceRequestRepository
+    from src.domain.maintenance_request import MaintenanceRequest
+
+    return MaintenanceRequestRepository(path).save(
+        MaintenanceRequest(
+            "Unit 3", "Manager test leak", "Keep these details", "Medium", status=status
+        )
+    )
+
+
+def update_priority_button(screen):
+    return next(button for button in screen.button if button.label == "Update Priority")
+
+
+def test_screen_manager_changes_open_priority_and_reloads(app):
+    screen, path = app
+    saved = seed_manager_request(path)
+    screen.run()
+    assert screen.selectbox(key="manager_request_id").options == [
+        f"#{saved.id}: Manager test leak (Unit 3)"
+    ]
+    screen.selectbox(key="manager_request_id").set_value(saved.id)
+    screen.selectbox(key="manager_priority").set_value("High")
+    update_priority_button(screen).click().run()
+    assert not screen.exception
+    assert not screen.error
+    assert screen.success[0].value == f"Request #{saved.id} priority updated to High."
+    assert screen.table[0].value.iloc[0]["Priority"] == "High"
+    assert screen.table[0].value.iloc[0]["Status"] == "Open"
+    assert screen.selectbox(key="manager_request_id").value == saved.id
+    with sqlite3.connect(path) as connection:
+        row = connection.execute(
+            "SELECT id, property_unit, title, description, priority, created_at, status "
+            "FROM maintenance_requests"
+        ).fetchone()
+    assert row == (
+        saved.id, saved.property_unit, saved.title, saved.description,
+        "High", saved.created_at, "Open",
+    )
+    restarted = AppTest.from_file(str(APP_PATH), default_timeout=15).run()
+    assert not restarted.exception
+    assert restarted.table[0].value.iloc[0]["Priority"] == "High"
+
+
+def test_screen_manager_rejects_completed_change_and_retains_selection(app):
+    screen, path = app
+    saved = seed_manager_request(path, status="Completed")
+    screen.run()
+    screen.selectbox(key="manager_request_id").set_value(saved.id)
+    screen.selectbox(key="manager_priority").set_value("Critical")
+    update_priority_button(screen).click().run()
+    assert not screen.exception
+    assert "Completed maintenance requests cannot" in screen.error[0].value
+    assert not screen.success
+    assert screen.selectbox(key="manager_request_id").value == saved.id
+    assert screen.selectbox(key="manager_priority").value == "Critical"
+    assert screen.table[0].value.iloc[0]["Priority"] == "Medium"
+    with sqlite3.connect(path) as connection:
+        assert connection.execute(
+            "SELECT priority, status FROM maintenance_requests"
+        ).fetchall() == [("Medium", "Completed")]
+
+
+def test_screen_manager_handles_deleted_selection_and_clears_previous_success(app):
+    from contextlib import closing
+
+    screen, path = app
+    seed_manager_request(path)
+    screen.run()
+    screen.selectbox(key="manager_priority").set_value("High")
+    update_priority_button(screen).click().run()
+    assert screen.success
+    with closing(sqlite3.connect(path)) as connection, connection:
+        connection.execute("DELETE FROM maintenance_requests")
+    update_priority_button(screen).click().run()
+    assert not screen.exception
+    assert "was not found" in screen.error[0].value
+    assert not screen.success
+    assert not screen.table
+    assert all(button.label != "Update Priority" for button in screen.button)

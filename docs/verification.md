@@ -4,6 +4,8 @@ These checks were executed by Codex as AI-assisted technical verification.
 They provide evidence for the student and partner to review; they do not claim
 student execution, partner approval, or final acceptance.
 
+The original sections below record the October 10 snapshot. They are historical; the October 18 section records the current implementation.
+
 ## Existing implementation audit
 
 - All 22 tracked files were read, including source, tests, README, ADRs, workflow,
@@ -101,9 +103,77 @@ assert len(service.list_requests()) == 1
 
 These are Codex-observed results. They do not claim student execution or partner acceptance.
 
-## Review boundary
+## Review boundary (historical: October 10)
 
-Main does not yet contain the application or CI workflow. README therefore clones
-the working feature branch, and its badge selects feature-branch PR checks.
-No green main run is claimed. Issue #1 remains future login/owner-portal work.
-Issue #5 remains open while the implementation awaits real partner review and merge.
+At that point, main did not contain the application or CI workflow. README cloned
+the working feature branch, and its badge selected feature-branch PR checks.
+No green main run was claimed. Issue #1 was future login/owner-portal work.
+Issue #5 was open while the implementation awaited partner review and merge.
+These statements describe that earlier snapshot, not the current main branch.
+
+
+## October 18: manager priority updates
+
+### Baseline and scope
+
+- Repository: `JaiKaushik03/cen5064-project-Jai`.
+- Clean local main matched live main at `1ca46ffa4ef53aa22674c837ed130ae919b24be6`.
+- Baseline: **30 passed, 0 failed** using the project's Python 3.13.7 virtual environment; `pip check` found no broken requirements.
+- Work is on `feature/manager-priority-update`; main is not edited or merged.
+- Existing ADRs, dependencies, CI configuration, and planned full-semester design are preserved.
+
+### Automated verification
+
+```powershell
+.\.venv\Scripts\python.exe -m pytest -q
+.\.venv\Scripts\python.exe -m pip check
+git diff --check
+```
+
+The updated suite produced **69 passed, 0 failed**, including all 30 existing cases.
+
+- Allowed: real SQLite Open request changes Medium to High, returned replacement is immutable, all unrelated fields match, and a fresh repository/service reloads High.
+- Rejected: a Completed fixture raises the Domain's meaningful validation error. A spy wrapping the real repository proves `update_priority()` is not called. SQL and a fresh repository show the original priority unchanged.
+- All four priority enum members and strings remain valid for Open requests. Unsupported priorities and statuses are rejected.
+- Service delegation is tested explicitly: retrieve, call `MaintenanceRequest.change_priority()`, persist its result. Missing IDs never reach update.
+- A populated original six-column schema migrates twice without lost fields or duplicate columns; old rows become Open, an updated row reloads correctly, and the next ID preserves the old sequence.
+- Stale-status and missing-row update failures preserve stored data. Lookup/update connection cleanup is checked by renaming the database on Windows.
+- AppTest exercises successful manager update/reload, Completed rejection with selection retention, and deletion between render and submit. Existing required labels, successful reset, failed-input retention, repeated submit, and saved-row tests still pass.
+
+### Running application verification
+
+Used `PROPERTYCARE_DB_PATH` to isolate a disposable database under the ignored
+`.midterm-verification/oct18-priority-update/` directory. The normal
+`data/propertycare.db` was not opened or migrated for these checks.
+
+Started Streamlit on loopback port 8502 with:
+
+```powershell
+$env:PROPERTYCARE_DB_PATH = "$PWD\.midterm-verification\oct18-priority-update\manual.db"
+.\.venv\Scripts\python.exe -m streamlit run app.py --server.address 127.0.0.1 --server.port 8502 --server.headless true --browser.gatherUsageStats false
+```
+
+Observed through the actual browser:
+
+1. Startup migrated two existing six-column records to Open. IDs 7/8, property/unit, titles, descriptions, original priority values, and exact UTC timestamps survived.
+2. Selected legacy request #7 and changed Medium to High. Success and the saved table showed High; a direct SQLite query confirmed the exact original row except for priority.
+3. Submitted a new request through the original form. Success and the new saved row stayed visible; text fields cleared and priority returned to Medium.
+4. Marked only disposable fixture #8 Completed using a test setup script (there is no completion UI). The browser rejected its proposed High priority with the Domain error; the table kept Low/Completed.
+5. Submitted a blank title with other text entered. The validation message appeared; property/unit and description stayed entered and no new row was added.
+6. Stopped the actual server, restarted it against the same file, and reloaded the browser. High for #7, Low/Completed for #8, and submitted rows remained.
+7. Live regression checks exposed a pre-existing default/session-state duplication warning after successful submission. Both priority dropdowns now initialize from session state without a competing explicit widget default, and the full suite still passes. Request selection labels are stable; current priority/status are shown in the table. Repeated successful and failed submissions against the final source produced no widget-state warnings in the server output.
+
+### Responsibility and review boundary
+
+Domain owns the Completed restriction and value validation. Service coordinates
+lookup, Domain validation, and persistence. Data performs SQLite reads/writes and
+the repeatable schema migration. The UI calls Service and displays results.
+
+The manager controls are a demonstration, without authentication or role authorization.
+Open/Completed is the minimal state model needed for the rule; a status-change
+workflow, assignment, and contractor features are not implemented.
+
+These are AI-assisted technical verification results, not peer review or student
+execution. The implementation is intended for a **Draft PR**. No reviewer is
+requested, no review is submitted or approved, and no merge is authorized in this task.
+GitHub Actions evidence is reported with the PR after the branch is pushed.
