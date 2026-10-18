@@ -13,15 +13,13 @@ PropertyCare is a rental maintenance and work-order project for tenants, propert
 Requirements: Git and Python **3.13**. Run these commands in Windows Command Prompt to clone and start PropertyCare:
 
 ```bat
-git clone https://github.com/JaiKaushik03/cen5064-project-Jai.git
+git clone --branch main https://github.com/JaiKaushik03/cen5064-project-Jai.git
 cd cen5064-project-Jai
 py -3.13 -m venv .venv
 .venv\Scripts\activate
 python -m pip install -r requirements.txt
 python -m streamlit run app.py
 ```
-
-To try the October 18 implementation while PR #9 is still unmerged, run `git switch feature/manager-priority-update` after entering the cloned repository, before starting the app. The clone command otherwise checks out `main`.
 
 Open **http://localhost:8501** while the server is running. If Streamlit asks for an onboarding email, press Enter to skip it. Stop with **Ctrl+C** and restart with the same Streamlit command.
 
@@ -86,7 +84,7 @@ Streamlit displays confirmation and the stored record.
 
 Priority must be exactly **Low, Medium, High, or Critical**,
 using the existing `Priority` enum. Property / Unit and Issue title must contain
-non-whitespace text. Description is optional. Invalid data raises a domain
+non-whitespace text. Description is optional free-form text: digits such as `"123"` are valid text, while non-string values are rejected. There is no alphabetic-only description rule. Invalid data raises a domain
 validation error before the service calls storage; the UI displays that error.
 
 Fields marked * are required. After a successful save, the text fields clear and priority resets to Medium; the confirmation and saved request remain visible. Validation errors preserve entered values.
@@ -132,7 +130,7 @@ GitHub Actions uses Python 3.13 and runs `python -m pytest -q` for pushes to `ma
 5. Stop the server with Ctrl+C, restart with `python -m streamlit run app.py`, and refresh the browser. Show that the row remains.
 6. Enter **Oak Court / Unit 2B**, leave Issue title blank, and click **Submit request**. Show the validation message and that the saved-request count does not increase.
 7. Show the Completed rejection test and the service spy proving no update call; briefly explain the Domain method.
-8. Show the README layer table and the passing PR CI result. The badge tracks `main`; it does not represent an unmerged Draft PR.
+8. Show the README layer table, the main-branch CI badge, and the latest successful Actions run.
 
 ## Semester scope and future work
 
@@ -144,6 +142,18 @@ design are preserved in [the planned full-semester design](docs/planned-design.m
 
 [Issue #5](https://github.com/JaiKaushik03/cen5064-project-Jai/issues/5) tracks the maintenance request workflow.
 [PR #4](https://github.com/JaiKaushik03/cen5064-project-Jai/pull/4) documents the original priority rule and AI critique.
+
+## Project tracking
+
+[PropertyCare Midterm Board](https://github.com/users/JaiKaushik03/projects/1) tracks completed maintenance features and planned semester work.
+
+| Work | Implementation status | Tracking |
+|---|---|---|
+| Four supported priorities and Domain validation | Implemented | [Issue #3](https://github.com/JaiKaushik03/cen5064-project-Jai/issues/3) |
+| Submit, validate, save, and display maintenance requests | Implemented | [Issue #5](https://github.com/JaiKaushik03/cen5064-project-Jai/issues/5), [PR #7](https://github.com/JaiKaushik03/cen5064-project-Jai/pull/7) |
+| Change priority for Open requests; reject Completed requests | Implemented, with partner feedback addressed | [PR #9](https://github.com/JaiKaushik03/cen5064-project-Jai/pull/9) |
+| Login and owner portal | Planned; not implemented | [Issue #1](https://github.com/JaiKaushik03/cen5064-project-Jai/issues/1) |
+| Completion action and manual lifecycle demonstration | Planned; not implemented | [Issue #10](https://github.com/JaiKaushik03/cen5064-project-Jai/issues/10) |
 
 ## Development and verification
 
@@ -165,4 +175,4 @@ GoldLion72 reviewed the priority-change implementation in [PR #9](https://github
 
 - Oct 18: Added manager priority updates, Domain-owned Completed restriction, minimal request status, safe SQLite migration, and regression coverage. Local suite: 69 passed, 0 failed. Verified both real browser workflows and restart persistence against an isolated legacy database; the initial implementation was handed off as a Draft PR before peer review.
 
-- Oct 18 partner-review follow-up: Matched the manager priority default to the selected request, added selection/rerun regression tests, clarified contribution credit, and recorded the completion UI as future Issue #10. The updated commit requires partner re-review before merge.
+- Oct 18 partner-review follow-up: Matched the manager priority default to the selected request, added selection/rerun regression tests, clarified contribution credit, and recorded the completion UI as future Issue #10. Jai subsequently authorized merging the corrected implementation without a second review; the recorded partner review remains COMMENTED, not a formal approval.

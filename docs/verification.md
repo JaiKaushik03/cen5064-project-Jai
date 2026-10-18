@@ -4,7 +4,7 @@ These checks were executed by Codex as AI-assisted technical verification.
 They provide evidence for the student and partner to review; they do not claim
 student execution, partner approval, or final acceptance.
 
-These notes are chronological. The October 10 audit and initial October 18 implementation are historical snapshots; the final section records the partner-review follow-up.
+These notes are chronological. The October 10 audit and initial October 18 implementation are historical snapshots; later sections record the partner feedback and the owner-authorized merge handoff.
 
 ## Existing implementation audit
 
@@ -234,11 +234,44 @@ or treat a GitHub commit author as proof of who wrote every line.
 - The normal `data/propertycare.db` was not opened or migrated for the checks; its SHA-256 remained unchanged.
 - The server was stopped after verification and produced no widget-state error/warning output.
 
-### Stopping point
+### Previous stopping point (historical)
 
-These corrections will be committed and pushed to the existing feature branch.
-The new commit needs partner re-review: the existing review comments refer to
-the earlier implementation, and no formal approval has been recorded.
-Latest-head CI and review state are reported in the PR description.
-No reviewer is requested automatically, no review is submitted or approved,
-the PR remains Draft, and no merge or branch deletion is performed.
+The correction was committed as `bbf159406c65985b0df96de904cc90c7769fe66f`
+and pushed to the same branch. Its CI run
+[39170131829](https://github.com/JaiKaushik03/cen5064-project-Jai/actions/runs/39170131829)
+passed all 75 tests. At that handoff, Codex recommended re-review and left PR #9
+Draft and unmerged. No review was requested, submitted, or approved by Codex.
+The owner later gave a different instruction, recorded below.
+
+
+## October 18: owner-authorized final integration
+
+After the partner's comments were addressed, Jai explicitly instructed Codex to
+merge without a second review and update the project, README, and related records.
+This supersedes the previous stop-before-merge instruction and re-review
+recommendation. It does not turn GoldLion72's COMMENTED review into APPROVED,
+and no review or approval is submitted on the partner's behalf.
+
+The final documentation cleanup removes the temporary feature-branch checkout
+instructions, clones `main` explicitly, links the public project board, and lists
+implemented versus planned scope. It also clarifies the earlier description
+question: digit-only strings are text; a non-string value is rejected by Domain.
+The Linux/macOS setup alternatives remain documented. No new description
+restriction or unrelated subsystem is introduced.
+
+The board keeps completed priority validation and request submission in Done,
+tracks PR #9 through its merge, and keeps login/owner access (#1) and completion
+UI (#10) as future Todo work. The completed workflow issue's old waiting-for-PR-7
+wording is corrected. The partner's original review text is preserved.
+
+The functional implementation is unchanged from `bbf1594`: Domain owns the
+Completed restriction, Service coordinates, Data performs safe migration and
+parameterized storage, and the manager selector loads the saved priority. Local
+verification before this documentation cleanup and the corresponding CI both
+passed all 75 tests; real-browser and original-database-preservation evidence is
+recorded above.
+
+The final documentation commit is checked in PR CI before a normal GitHub merge
+with an expected-head SHA. No force merge, protection override, fabricated review,
+or branch deletion is authorized. The resulting merge SHA and main-branch CI
+receipt are recorded in PR #9 and the final handoff after GitHub confirms them.
