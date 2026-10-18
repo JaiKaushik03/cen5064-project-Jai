@@ -1,9 +1,10 @@
 """Maintenance request data and business rules; no UI or database dependencies."""
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from datetime import datetime, timezone
 
 from src.domain.priority import Priority
+from src.domain.request_status import RequestStatus
 
 
 @dataclass(frozen=True)
@@ -16,6 +17,7 @@ class MaintenanceRequest:
     created_at: str = field(
         default_factory=lambda: datetime.now(timezone.utc).isoformat(timespec="seconds")
     )
+    status: RequestStatus = RequestStatus.OPEN
 
     def __post_init__(self):
         for name, label in (("property_unit", "Property / Unit"), ("title", "Issue title")):
@@ -31,3 +33,16 @@ class MaintenanceRequest:
         except (ValueError, TypeError) as error:
             choices = ", ".join(priority.value for priority in Priority)
             raise ValueError(f"Priority must be one of: {choices}.") from error
+
+        try:
+            object.__setattr__(self, "status", RequestStatus(self.status))
+        except (ValueError, TypeError) as error:
+            raise ValueError("Status must be Open or Completed.") from error
+
+    def change_priority(self, priority: str | Priority) -> "MaintenanceRequest":
+        """Return a validated replacement; completed requests cannot change priority."""
+        if self.status is RequestStatus.COMPLETED:
+            raise ValueError(
+                "Completed maintenance requests cannot have their priority changed."
+            )
+        return replace(self, priority=priority)
