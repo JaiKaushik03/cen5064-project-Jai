@@ -275,3 +275,19 @@ The final documentation commit is checked in PR CI before a normal GitHub merge
 with an expected-head SHA. No force merge, protection override, fabricated review,
 or branch deletion is authorized. The resulting merge SHA and main-branch CI
 receipt are recorded in PR #9 and the final handoff after GitHub confirms them.
+
+
+## October 24: authentication/signup peer-review candidate
+
+The current main baseline was rechecked at `1a6223c` with 75 passing tests.
+The separate authentication feature branch adds tenant signup/login, owner login,
+two credential databases, Argon2id, explicit local demo setup, and role-protected
+landing screens. Its complete local suite has **169 passed, 0 failed**, with all
+75 original cases retained. See [the authentication verification record](authentication-verification.md)
+for commands, real browser/restart checks, seeding and hash verification, privacy,
+configuration guards, and preserved database evidence.
+
+This work is tracked in Issue #12 and is not merged into main. Today's handoff is
+an open, ready-for-review PR for GoldLion72; no peer review or approval is claimed.
+The October 18 owner-authorized merge above is history for PR #9 and does not
+authorize merging the October 24 authentication PR.
