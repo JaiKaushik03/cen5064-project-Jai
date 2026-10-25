@@ -24,7 +24,7 @@ Executed in the project's Python 3.13.7 virtual environment:
 git diff --check
 ```
 
-Final complete suite: **169 passed, 0 failed**. All 75 original cases are retained,
+October 24 complete suite: **169 passed, 0 failed**. All 75 original cases are retained,
 with 94 new account/security/UI cases. Dependency checks found no broken requirements.
 Whitespace checks passed.
 
@@ -103,15 +103,55 @@ The test servers were stopped after checks without widget-state errors or warnin
 ## Boundaries and handoff
 
 Authentication session state stores opaque tokens. Typed password-widget values
-exist transiently in Streamlit memory and are cleared after submissions/navigation;
+exist transiently in Streamlit memory. The October 24 implementation cleared them
+after submissions/navigation; the October 25 correction below retains failed-signup
+inputs until correction, successful signup, or navigation. In both versions,
 they are not retained in authenticated session records or written/logged as plaintext.
 Tenant/request ownership is not implemented, so tenant dashboards deliberately
 cannot use or read the shared legacy workspace. The exact future owner Active/Fixed
 Issues requirements are documented separately; no status, ownership, or assignment
 tables/columns are added by this PR.
 
-The feature PR must be open and ready for GoldLion72, without a review submitted,
+The October 24 handoff required the feature PR to be open and ready for GoldLion72, without a review submitted,
 approval invented, merge, or branch deletion. The previous October 18 merge
-authorization applied to PR #9 only. Today's explicit instruction is to stop before
+authorization applied to PR #9 only. That day's explicit instruction was to stop before
 peer review and merge. Latest-head GitHub CI and the real PR URL are recorded in
 the PR description and final handoff after GitHub confirms them.
+
+
+## October 25: partner corrections and merge authorization
+
+GoldLion72 left a COMMENTED review on PR #13, recommending that signup passwords
+survive validation errors and that the new account email be prefilled on login.
+The review is not APPROVED or CHANGES_REQUESTED. No inline review threads were
+present. Jai then explicitly instructed Codex to apply the needed fixes and merge
+the PR. That newer instruction supersedes the October 24 stopping point; no peer
+approval is invented and no repository protection may be bypassed.
+
+The signup callback now clears its form only after the service saves an account.
+On success, it uses the persisted normalized email for tenant login and leaves
+the login password empty. Validation failures retain both masked password widgets,
+the other fields, and checkbox choices. Login attempts, navigation and logout
+still clear passwords. Assignments occur in form callbacks before widget render.
+The account, hashing, role, maintenance and database-migration code is unchanged.
+
+Actual verification in the project's virtual environment:
+
+- `python -m pytest -q`: **173 passed, 0 failed**, in 25.91 seconds. Four additional
+  cases cover missing unit/address, correcting only the missing unit, and clearing
+  passwords when leaving failed signup. Existing cases now assert preserved
+  passwords for validation errors and use the prefilled normalized email to log in.
+- `python -m pip check`: no broken requirements. `git diff --check`: passed.
+- Real Streamlit on `127.0.0.1:8505`, using only
+  `.midterm-verification/review-20261025/accounts/` and `requests.db` overrides:
+  submitted a fictional tenant without a unit, observed the required-unit error,
+  corrected only the unit, and successfully created the account. Both passwords
+  remained masked. Login displayed the prefilled email and an empty password;
+  entering only the password reached Demo Review Tenant's dashboard. Logout
+  cleared the session. No native desktop input was used.
+
+The original maintenance database SHA-256 remains the value recorded above.
+No populated databases or screenshots are committed. README startup instructions
+now use a normal main clone, and the ADR records the accepted decision and the
+updated transient-widget behavior. Latest PR/main CI results and the actual merge
+receipt are recorded on PR #13 after GitHub confirms them.

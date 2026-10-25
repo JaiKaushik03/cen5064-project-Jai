@@ -10,14 +10,14 @@ PropertyCare is a rental maintenance and work-order project for tenants, propert
 
 The existing maintenance submission and priority-change workflow is preserved in an **owner-only workspace**. Tenant/request ownership has not been migrated, so tenant dashboards do not expose the shared request database. The Domain still rejects priority changes to Completed requests.
 
-**Review status:** October 24 authentication work is on `feature/tenant-owner-authentication`, tracked by [Issue #12](https://github.com/JaiKaushik03/cen5064-project-Jai/issues/12). It is a peer-review candidate and is not merged into `main`. The badge above continues to track main; use the feature PR's checks for this work.
+**Authentication review:** [PR #13](https://github.com/JaiKaushik03/cen5064-project-Jai/pull/13) tracks the implementation and merge history for [Issue #12](https://github.com/JaiKaushik03/cen5064-project-Jai/issues/12). GoldLion72 reviewed it on October 25 and suggested two signup improvements; both are implemented. Their review is COMMENTED, not a formal approval. Jai authorized merging after the corrections and verification. The badge above tracks main.
 
 ## How to run
 
-Requirements: Git and Python **3.13**. These Windows Command Prompt commands check out the October 24 review branch. Once that PR is merged, a normal main-branch clone can use the same setup commands:
+Requirements: Git and Python **3.13**. Use these Windows Command Prompt commands to clone main and set up the local demonstration:
 
 ```bat
-git clone --branch feature/tenant-owner-authentication https://github.com/JaiKaushik03/cen5064-project-Jai.git
+git clone https://github.com/JaiKaushik03/cen5064-project-Jai.git
 cd cen5064-project-Jai
 py -3.13 -m venv .venv
 .venv\Scripts\activate
@@ -57,7 +57,7 @@ The first screen is **PropertyCare — Rental Maintenance Management System**, w
 
 Tenant signup requires Full Name, Email Address, Phone Number, Address, Unit Number, Password, Confirm Password, and terms acceptance. Email is normalized and unique ignoring case. Phone input accepts common punctuation and 10–15 digits. New passwords require 12–128 characters including a letter and a number; the weak demo passwords bypass that policy only in the explicit local seeder.
 
-The optional updates checkbox starts unchecked and stores a preference only; no notifications are sent. The required terms checkbox starts unchecked. Read the versioned, nonbinding academic terms in the signup expander. The service records the acceptance time and current terms version. Successful signup confirms account creation and returns to tenant login; it never grants owner access.
+The optional updates checkbox starts unchecked and stores a preference only; no notifications are sent. The required terms checkbox starts unchecked. Read the versioned, nonbinding academic terms in the signup expander. The service records the acceptance time and current terms version. Signup validation errors preserve all entered fields, including both masked password inputs, so missing details can be corrected without retyping them. Successful signup confirms account creation, clears the signup form, and returns to tenant login with the saved, normalized email prefilled and an empty password. It never grants owner access.
 
 Tenant login opens a **Tenant Dashboard** showing the registered name and Logout. Owner login opens a separate **Owner Dashboard** with Logout and an **Open maintenance requests** action for the preserved workflow. Logout revokes the session token and clears application session state. URL parameters cannot select a role or grant protected-page access.
 
@@ -75,7 +75,7 @@ Authentication databases are created automatically and repeatably on first login
 
 Passwords use salted **Argon2id** through pinned [argon2-cffi](https://pypi.org/project/argon2-cffi/) 25.1.0, with 64 MiB memory, three iterations, and parallelism four. SQLite stores hashes, not plaintext or reversible credentials. Different hashes have fresh library-generated salts.
 
-Authentication session state contains an opaque random token, not a password or a browser-supplied role. The server resolves its role/account/store identity and rechecks the database account. Password inputs necessarily exist transiently in Streamlit's widget memory while being entered; callbacks clear them after login/signup attempts, navigation, and logout. No plaintext password is retained in the authenticated session, stored in account rows, or logged. This is a local course application; public deployment, rate limiting, email verification, password recovery, and a production identity provider are separate work.
+Authentication session state contains an opaque random token, not a password or a browser-supplied role. The server resolves its role/account/store identity and rechecks the database account. Password inputs necessarily exist transiently in Streamlit's widget memory while being entered; callbacks clear them after every login attempt, successful signup, navigation, and logout. After a failed signup, both masked password inputs remain only in the active form for correction; they are cleared when the user leaves signup. No plaintext password is retained in the authenticated session, stored in account rows, or logged. This is a local course application; public deployment, rate limiting, email verification, password recovery, and a production identity provider are separate work.
 
 The existing maintenance schema migration is unchanged. If `status` is missing, the repository adds `status TEXT NOT NULL DEFAULT 'Open'` in a transaction. Old rows become Open, and IDs, fields, priorities, timestamps, and the ID sequence are preserved. Repeated initialization does not recreate the table or add duplicate columns. Open/Completed remains the current minimal state model; no completion UI is added here.
 
@@ -88,7 +88,7 @@ python -m pip install -r requirements-dev.txt
 python -m pytest -q
 ```
 
-Tests cover separate-store login, cross-role rejection, signup/profile/password/consent rules, secure hashes, opt-in/idempotent seeding, store identity, persistence, protected routes, logout, and the preserved maintenance rules/SQLite/screen flows. The full suite contains **169 tests**. The previous 75 cases remain, with maintenance screen tests now performing real owner login before their original assertions.
+Tests cover separate-store login, cross-role rejection, signup/profile/password/consent rules, secure hashes, opt-in/idempotent seeding, store identity, persistence, protected routes, logout, and the preserved maintenance rules/SQLite/screen flows. The full suite contains **173 tests**. The previous 75 cases remain, with maintenance screen tests now performing real owner login before their original assertions.
 
 Run the professor's two required service/SQLite cases separately with:
 
@@ -161,7 +161,7 @@ The submission Priority starts at Medium and resets to Medium after a successful
 |---|---|
 | [ADR 001: Layered Architecture](docs/adr/adr-001-layered-architecture.md) | accepted |
 | [ADR 002: SQLite Persistence](docs/adr/adr-002-sqlite-persistence.md) | accepted |
-| [ADR 003: Separate authentication stores and protected legacy workspace](docs/adr/adr-003-separate-authentication.md) | proposed for this PR |
+| [ADR 003: Separate authentication stores and protected legacy workspace](docs/adr/adr-003-separate-authentication.md) | accepted; October 25 follow-up recorded |
 
 The original ADR template and worked example remain as course references.
 They are not counted as PropertyCare decisions.
@@ -199,7 +199,7 @@ The original C4/UML diagrams and priority/image design remain in [the planned fu
 | Four supported priorities and Domain validation | Implemented | [Issue #3](https://github.com/JaiKaushik03/cen5064-project-Jai/issues/3) |
 | Submit, validate, save, and display maintenance requests | Implemented | [Issue #5](https://github.com/JaiKaushik03/cen5064-project-Jai/issues/5), [PR #7](https://github.com/JaiKaushik03/cen5064-project-Jai/pull/7) |
 | Change priority for Open requests; reject Completed requests | Implemented, with partner feedback addressed | [PR #9](https://github.com/JaiKaushik03/cen5064-project-Jai/pull/9) |
-| Tenant/owner login, tenant signup, protected landing pages | Implemented on this review branch; not merged | [Issue #12](https://github.com/JaiKaushik03/cen5064-project-Jai/issues/12) |
+| Tenant/owner login, tenant signup, protected landing pages | Implemented; partner signup feedback addressed | [Issue #12](https://github.com/JaiKaushik03/cen5064-project-Jai/issues/12) |
 | Full owner portal and tenant-owned request visibility | Planned; not implemented | [Issue #1](https://github.com/JaiKaushik03/cen5064-project-Jai/issues/1) |
 | Completion action and manual lifecycle demonstration | Planned; not implemented | [Issue #10](https://github.com/JaiKaushik03/cen5064-project-Jai/issues/10) |
 
@@ -225,4 +225,7 @@ GoldLion72 reviewed the priority-change implementation in [PR #9](https://github
 
 - Oct 18 partner-review follow-up: Matched the manager priority default to the selected request, added selection/rerun regression tests, clarified contribution credit, and recorded the completion UI as future Issue #10. Jai subsequently authorized merging the corrected implementation without a second review; the recorded partner review remains COMMENTED, not a formal approval.
 
-- Oct 24: Jai supplied the authentication/signup flow, fields, account separation, demo credentials, interface decisions, and future owner workflow requirements. Codex implemented the authentication slice, preserved maintenance behavior behind owner access, and performed the automated/database/browser verification. This feature branch is for peer review; today's PR is not merged.
+- Oct 24: Jai supplied the authentication/signup flow, fields, account separation, demo credentials, interface decisions, and future owner workflow requirements. Codex implemented the authentication slice, preserved maintenance behavior behind owner access, and performed the automated/database/browser verification. The initial handoff was an open PR for peer review; see the October 25 follow-up below.
+
+
+- Oct 25 partner-review follow-up: GoldLion72 suggested preserving signup passwords after validation errors and prefilling the login email after account creation. Codex implemented both using form callbacks, added retry/navigation/prefill regression checks, and ran all 173 tests successfully. Jai authorized merging the corrected PR after verification; the partner review remains COMMENTED, with no formal approval claimed.

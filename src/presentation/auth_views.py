@@ -82,7 +82,7 @@ def login(authentication, role):
 def signup(authentication):
     st.session_state.pop("auth_error", None)
     try:
-        authentication.signup(
+        account = authentication.signup(
             st.session_state.get("signup_full_name", ""),
             st.session_state.get("signup_email", ""),
             st.session_state.get("signup_phone", ""),
@@ -96,14 +96,15 @@ def signup(authentication):
     except ValueError as error:
         st.session_state["auth_error"] = str(error)
     else:
+        # Form callbacks run before widgets render, so these assignments are safe.
+        st.session_state["tenant_email"] = account.profile.email
+        clear_password_fields()
         for key in ("signup_full_name", "signup_email", "signup_phone", "signup_address", "signup_unit"):
             st.session_state[key] = ""
         st.session_state["signup_updates"] = False
         st.session_state["signup_terms"] = False
         st.session_state["auth_page"] = "tenant_login"
         st.session_state["auth_success"] = "Account created successfully. You can now log in."
-    finally:
-        clear_password_fields()
 
 
 def feedback():

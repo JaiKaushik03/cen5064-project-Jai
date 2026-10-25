@@ -141,19 +141,24 @@ def test_signup_required_indicators_terms_and_default_preferences(auth_app):
 def test_signup_confirmation_persistence_tenant_login_and_no_owner_access(auth_app, opt_in):
     screen, tenants, _, _ = auth_app
     button(screen, "Sign Up").click().run()
-    fill_signup(screen)
+    screen.session_state["tenant_email"] = "previous@example.com"
+    fill_signup(screen, email="  NEW-SIGNUP@example.com  ")
     screen.checkbox(key="signup_terms").set_value(True)
     screen.checkbox(key="signup_updates").set_value(opt_in)
     button(screen, "Create Account").click().run()
     assert not screen.exception
     assert screen.title[0].value == "PropertyCare"
     assert "Account created successfully" in screen.success[0].value
+    assert screen.text_input(key="tenant_email").value == "new-signup@example.com"
+    assert screen.text_input(key="tenant_password").value == ""
     assert_passwords_cleared(screen)
     saved = TenantAccountRepository(tenants.database_path).get_by_email("NEW-SIGNUP@example.com")
     assert saved.profile.updates_opt_in is opt_in
     assert saved.profile.unit_number == "Demo 4B"
     assert "auth_token" not in screen.session_state
-    login_tenant(screen, "NEW-SIGNUP@example.com", "NewSignup2026!")
+    # Use the prefilled email without entering it again.
+    screen.text_input(key="tenant_password").set_value("NewSignup2026!")
+    button(screen, "Log In").click().run()
     assert screen.title[0].value == "Tenant Dashboard"
     assert screen.text[0].value == "Welcome, Demo New Signup."
     screen.session_state["auth_page"] = "owner_dashboard"
@@ -170,12 +175,14 @@ def test_signup_confirmation_persistence_tenant_login_and_no_owner_access(auth_a
 @pytest.mark.parametrize(("changes", "terms", "message"), [
     ({}, False, "Terms and Conditions"),
     ({"full_name": "   "}, True, "Full name"),
+    ({"unit": "   "}, True, "Unit number"),
+    ({"address": ""}, True, "Address"),
     ({"email": "not-an-email"}, True, "valid email"),
     ({"phone": "abc"}, True, "phone number"),
     ({"confirmation": "OtherPassword2026!"}, True, "do not match"),
     ({"email": "USER1@LOGIN.COM"}, True, "already exists"),
 ])
-def test_signup_errors_do_not_create_accounts_and_clear_passwords(auth_app, changes, terms, message):
+def test_signup_errors_preserve_inputs_and_do_not_create_accounts(auth_app, changes, terms, message):
     screen, tenants, _, _ = auth_app
     button(screen, "Sign Up").click().run()
     fill_signup(screen, **changes)
@@ -184,9 +191,11 @@ def test_signup_errors_do_not_create_accounts_and_clear_passwords(auth_app, chan
     assert not screen.exception
     assert message in screen.error[0].value
     assert screen.title[0].value == "Create Your PropertyCare Account"
-    assert_passwords_cleared(screen)
+    assert screen.text_input(key="signup_password").value == changes.get("password", "NewSignup2026!")
+    assert screen.text_input(key="signup_confirmation").value == changes.get("confirmation", "NewSignup2026!")
     assert tenants.get_by_email("new-signup@example.com") is None
-    assert screen.text_input(key="signup_address").value == "200 Fictional Avenue"
+    assert screen.text_input(key="signup_address").value == changes.get("address", "200 Fictional Avenue")
+    assert screen.checkbox(key="signup_terms").value is terms
 
 
 @pytest.mark.parametrize("page", ["owner_dashboard", "owner_maintenance", "tenant_dashboard"])
@@ -285,3 +294,46 @@ def test_startup_creates_empty_auth_stores_without_automatic_demo_seeding(tmp_pa
     assert not maintenance.exists()
     login_tenant(screen)
     assert screen.error[0].value == "Invalid email address or password."
+
+
+def test_signup_missing_unit_can_be_corrected_without_retyping_passwords(auth_app):
+    screen, tenants, _, _ = auth_app
+    button(screen, "Sign Up").click().run()
+    fill_signup(screen, unit="")
+    screen.checkbox(key="signup_terms").set_value(True)
+    screen.checkbox(key="signup_updates").set_value(True)
+    button(screen, "Create Account").click().run()
+    assert not screen.exception
+    assert "Unit number" in screen.error[0].value
+    assert screen.text_input(key="signup_password").value == "NewSignup2026!"
+    assert screen.text_input(key="signup_confirmation").value == "NewSignup2026!"
+    assert screen.checkbox(key="signup_updates").value is True
+    assert tenants.get_by_email("new-signup@example.com") is None
+
+    screen.text_input(key="signup_unit").set_value("Demo 4B")
+    button(screen, "Create Account").click().run()
+    assert not screen.exception
+    assert not screen.error
+    assert "Account created successfully" in screen.success[0].value
+    assert screen.text_input(key="tenant_email").value == "new-signup@example.com"
+    assert_passwords_cleared(screen)
+    assert tenants.get_by_email("new-signup@example.com").profile.updates_opt_in is True
+
+
+def test_leaving_failed_signup_clears_passwords_and_does_not_prefill_login(auth_app):
+    screen, _, _, _ = auth_app
+    button(screen, "Sign Up").click().run()
+    fill_signup(screen, unit="")
+    screen.checkbox(key="signup_terms").set_value(True)
+    button(screen, "Create Account").click().run()
+    assert screen.text_input(key="signup_password").value == "NewSignup2026!"
+    button(screen, "Back to User Login").click().run()
+    assert not screen.exception
+    assert screen.title[0].value == "PropertyCare"
+    assert screen.text_input(key="tenant_email").value == ""
+    assert not screen.error
+    assert_passwords_cleared(screen)
+    button(screen, "Sign Up").click().run()
+    assert not screen.exception
+    assert screen.text_input(key="signup_password").value == ""
+    assert screen.text_input(key="signup_confirmation").value == ""

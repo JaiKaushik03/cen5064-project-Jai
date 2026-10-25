@@ -287,7 +287,21 @@ landing screens. Its complete local suite has **169 passed, 0 failed**, with all
 for commands, real browser/restart checks, seeding and hash verification, privacy,
 configuration guards, and preserved database evidence.
 
-This work is tracked in Issue #12 and is not merged into main. Today's handoff is
+At the October 24 handoff, this work was tracked in Issue #12 and not merged into main. That handoff was
 an open, ready-for-review PR for GoldLion72; no peer review or approval is claimed.
 The October 18 owner-authorized merge above is history for PR #9 and does not
 authorize merging the October 24 authentication PR.
+
+
+## October 25: authentication review corrections
+
+GoldLion72's COMMENTED review on PR #13 suggested retaining signup passwords on
+validation errors and prefilling login email after successful registration.
+Codex implemented both with safe form callbacks, retained password clearing on
+successful signup/login attempts/navigation/logout, and verified **173 passed,
+0 failed** plus the actual signup-correction/login flow in the in-app browser
+against isolated stores. Jai explicitly authorized merging after these corrections
+and checks. This supersedes the October 24 stop instruction; it does not turn
+the partner's comments into a formal approval. See the updated
+[authentication verification record](authentication-verification.md) and PR #13
+for the latest-head CI and merge receipt. Broader owner features remain future work.

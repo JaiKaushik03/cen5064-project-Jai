@@ -1,7 +1,7 @@
 # ADR 003: Separate authentication stores and protected legacy workspace
 
 **Date:** 2026-10-24
-**Status:** proposed for peer review; implemented on the authentication branch
+**Status:** accepted by Jai; October 25 partner-feedback follow-up
 
 ## Context
 
@@ -22,8 +22,10 @@ Use [argon2-cffi](https://pypi.org/project/argon2-cffi/) 25.1.0 for salted Argon
 hashing (64 MiB, three iterations, parallelism four). The cached local service issues
 opaque random tokens backed by server-owned role/account/database identities.
 Protected reads/writes recheck the account; logout revokes the token and clears
-state. Password widgets are transient and cleared after submission/navigation,
-with no plaintext password in authenticated session records or account storage.
+state. Password widgets are transient and cleared after login attempts, successful
+signup, navigation, and logout. Failed signup retains the masked form inputs for
+correction; successful signup prefills only the saved email on tenant login. No
+plaintext password is placed in authenticated session records or account storage.
 
 Extract the existing maintenance presentation and gate its shared workspace to
 owners, including a Service adapter checking callbacks before writes. Tenant
