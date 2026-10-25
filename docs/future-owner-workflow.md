@@ -1,0 +1,60 @@
+# Future owner issue-management workflow
+
+**Status:** planned only. This specification records Jai's October 24 requirements;
+it is not implemented by the authentication/signup PR. Related: broader Issue #1
+and completion Issue #10.
+
+## Tenant/request ownership first
+
+A future tenant submission must be associated with the authenticated tenant's
+account, using server-validated identity. Do not trust a tenant ID or role supplied
+in a URL or form. Define a non-destructive migration for legacy requests and the
+tenant/profile association before enabling tenant-specific request screens.
+
+Today the existing shared request workspace is owner-only. The Tenant Dashboard
+does not submit or list requests; no tenant ownership columns or migration have
+been added to the maintenance database.
+
+## Active Issues table
+
+The authenticated Owner Dashboard will display Active Issues. Each row must show:
+
+- Issue ID, title, and description.
+- Priority and current status.
+- Original submission timestamp.
+- Tenant full name, email, phone number, address, and unit number.
+
+Every active issue will offer **Mark Fixed**. Tenant accounts and unauthenticated
+users must be denied by application/service authorization, not only by hidden UI.
+
+## Mark Fixed confirmation
+
+1. The owner selects Mark Fixed for an active issue.
+2. A confirmation popup/dialog explains that the issue will be marked Fixed.
+3. The owner must check an explicit confirmation checkbox.
+4. The owner must click Submit.
+5. Submission without the checkbox is rejected without changing storage.
+6. Service loads the authorized issue and asks Domain to validate the transition.
+7. Data commits the changed state and fixed/completion timestamp in SQLite.
+8. The issue leaves Active Issues and appears in Fixed Issues.
+
+No permanent deletion is allowed for this transition. Preserve the same issue ID,
+all original issue information, associated tenant details, and original submission
+timestamp. Fixed Issues also displays the fixed/completion timestamp. The future
+design must retain historical tenant information even if profiles later change.
+
+## State and layer responsibilities
+
+The current Domain has Open and Completed states. Fixed is the requested future
+UI term. A later design must define its mapping/transition without silently
+renaming current stored states or weakening the Completed priority restriction.
+
+Presentation supplies the table and confirmation controls; authentication/service
+checks owner identity; Domain enforces allowed status transitions; Service
+coordinates the workflow; Data performs parameterized transactional updates.
+
+Future tests must cover ownership isolation, unauthenticated/tenant rejection,
+missing confirmation, allowed/rejected transitions, unchanged data after rejection,
+retained profile/issue details, both timestamps, table movement, and persistence
+after restart. Contractor assignment, repair costs, and optional photos remain
+separate future work.

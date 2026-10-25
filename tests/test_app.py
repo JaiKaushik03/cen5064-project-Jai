@@ -9,11 +9,37 @@ from streamlit.testing.v1 import AppTest
 APP_PATH = Path(__file__).resolve().parents[1] / "app.py"
 
 
+@pytest.fixture(scope="session")
+def owner_fixture_hash():
+    from src.services.passwords import Passwords
+    return Passwords().hash("OwnerFixture2026!")
+
+
+def open_owner_workspace(screen):
+    # Exercise real login/navigation before the unchanged maintenance assertions.
+    next(b for b in screen.button if b.label == "Login as Owner").click().run()
+    screen.text_input(key="owner_email").set_value("fixture-owner@example.com")
+    screen.text_input(key="owner_password").set_value("OwnerFixture2026!")
+    next(b for b in screen.button if b.label == "Login as Owner").click().run()
+    next(b for b in screen.button if b.label == "Open maintenance requests").click().run()
+    assert not screen.exception
+    return screen
+
+
 @pytest.fixture
-def app(tmp_path, monkeypatch):
+def app(tmp_path, monkeypatch, owner_fixture_hash):
+    from src.data.account_repositories import OwnerAccountRepository
+    from src.domain.accounts import OwnerAccount
+
     path = tmp_path / "ui.db"
+    auth_dir = tmp_path / "auth"
     monkeypatch.setenv("PROPERTYCARE_DB_PATH", str(path))
-    return AppTest.from_file(str(APP_PATH), default_timeout=15).run(), path
+    monkeypatch.setenv("PROPERTYCARE_AUTH_DATA_DIR", str(auth_dir))
+    OwnerAccountRepository(auth_dir / "owner_accounts.db").save(
+        OwnerAccount("fixture-owner@example.com", owner_fixture_hash)
+    )
+    screen = AppTest.from_file(str(APP_PATH), default_timeout=15).run()
+    return open_owner_workspace(screen), path
 
 
 def test_screen_submit_storage_and_new_session(app):
@@ -41,7 +67,7 @@ def test_screen_submit_storage_and_new_session(app):
         assert connection.execute(
             "SELECT title, priority FROM maintenance_requests"
         ).fetchall() == [("Leaking kitchen sink", "Critical")]
-    restarted = AppTest.from_file(str(APP_PATH), default_timeout=15).run()
+    restarted = open_owner_workspace(AppTest.from_file(str(APP_PATH), default_timeout=15).run())
     assert not restarted.exception
     assert restarted.table[0].value.iloc[0]["Issue title"] == "Leaking kitchen sink"
     restarted.button[1].click().run()
@@ -157,7 +183,7 @@ def test_screen_manager_changes_open_priority_and_reloads(app):
         saved.id, saved.property_unit, saved.title, saved.description,
         "High", saved.created_at, "Open",
     )
-    restarted = AppTest.from_file(str(APP_PATH), default_timeout=15).run()
+    restarted = open_owner_workspace(AppTest.from_file(str(APP_PATH), default_timeout=15).run())
     assert not restarted.exception
     assert restarted.table[0].value.iloc[0]["Priority"] == "High"
 
