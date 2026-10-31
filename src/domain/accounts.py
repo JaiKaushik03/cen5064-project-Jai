@@ -4,6 +4,7 @@ from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from enum import Enum
 import re
+from uuid import UUID, uuid4
 
 TERMS_VERSION = "2026-10-24"
 DEMO_TERMS_VERSION = "2026-10-24-demo-seed"
@@ -99,6 +100,15 @@ def validate_hash(value):
         raise ValueError("An Argon2id password hash is required.")
 
 
+def normalize_account_key(value) -> str:
+    try:
+        if not isinstance(value, str):
+            raise ValueError
+        return str(UUID(value))
+    except ValueError as error:
+        raise ValueError("A valid tenant account key is required.") from error
+
+
 @dataclass(frozen=True)
 class TenantAccount:
     profile: TenantProfile
@@ -107,8 +117,10 @@ class TenantAccount:
     terms_version: str
     created_at: str = field(default_factory=utc_now)
     id: int | None = None
+    account_key: str = field(default_factory=lambda: str(uuid4()))
 
     def __post_init__(self):
+        object.__setattr__(self, "account_key", normalize_account_key(self.account_key))
         validate_hash(self.password_hash)
         required_text(self.terms_accepted_at, "Terms acceptance timestamp", 60)
         required_text(self.terms_version, "Terms version", 60)
@@ -133,3 +145,4 @@ class Principal:
     email: str
     display_name: str
     database_identity: str
+    account_key: str | None = None

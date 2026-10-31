@@ -56,7 +56,8 @@ class AuthenticationService:
         if not self.passwords.verify(encoded, password) or account is None:
             raise ValueError(INVALID_CREDENTIALS)
         name = account.profile.full_name if role is AccountRole.TENANT else "Owner"
-        principal = Principal(account.id, role, email, name, repository.identity)
+        principal = Principal(account.id, role, email, name, repository.identity,
+                              account.account_key if role is AccountRole.TENANT else None)
         token = secrets.token_urlsafe(32)
         with self._lock:
             self._sessions[token] = principal
@@ -75,7 +76,9 @@ class AuthenticationService:
         except ValueError:
             account = None
         email = (account.profile.email if principal.role is AccountRole.TENANT else account.email) if account else None
-        if repository.identity != principal.database_identity or email != principal.email:
+        account_changed = (principal.role is AccountRole.TENANT and account is not None
+                           and account.account_key != principal.account_key)
+        if repository.identity != principal.database_identity or email != principal.email or account_changed:
             self.logout(token)
             return None
         return principal
@@ -85,6 +88,15 @@ class AuthenticationService:
         if principal is None or principal.role is not role:
             raise AccessDeniedError(f"{role.value.title()} login is required to access this page.")
         return principal
+
+    def get_tenant_account(self, token) -> TenantAccount:
+        principal = self.require_session(token, AccountRole.TENANT)
+        account = self.tenants.get_by_id(principal.account_id)
+        if (account is None or account.profile.email != principal.email
+                or account.account_key != principal.account_key):
+            self.logout(token)
+            raise AccessDeniedError("Tenant login is required to access this page.")
+        return account
 
     def logout(self, token):
         if isinstance(token, str):
