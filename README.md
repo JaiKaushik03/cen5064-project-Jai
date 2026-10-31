@@ -6,18 +6,18 @@
 
 ## Project
 
-PropertyCare is a rental maintenance and work-order project for tenants, property managers, and maintenance contractors. This authentication feature adds tenant login/signup, a separate owner login, persistent accounts in two SQLite databases, and protected landing screens.
+PropertyCare is a rental maintenance and work-order project for tenants, property managers, and maintenance contractors. The implemented authentication includes tenant login/signup, a separate owner login, persistent accounts and protected dashboards. This Part 1 review branch connects tenants to private request submission and history.
 
-The existing maintenance submission and priority-change workflow is preserved in an **owner-only workspace**. Tenant/request ownership has not been migrated, so tenant dashboards do not expose the shared request database. The Domain still rejects priority changes to Completed requests.
+Tenants use **My maintenance requests** to submit and view only their own requests. Ownership comes from the signed-in account. The existing owner workspace can still view all requests and change allowed priorities. Older unassigned requests remain owner-only; the app never guesses a tenant from an old unit label. Domain still rejects priority changes to Completed requests.
 
 **Authentication review:** [PR #13](https://github.com/JaiKaushik03/cen5064-project-Jai/pull/13) tracks the implementation and merge history for [Issue #12](https://github.com/JaiKaushik03/cen5064-project-Jai/issues/12). GoldLion72 reviewed it on October 25 and suggested two signup improvements; both are implemented. Their review is COMMENTED, not a formal approval. Jai authorized merging after the corrections and verification. The badge above tracks main.
 
 ## How to run
 
-Requirements: Git and Python **3.13**. Use these Windows Command Prompt commands to clone main and set up the local demonstration:
+Requirements: Git and Python **3.13**. These Windows Command Prompt commands clone the Part 1 review branch. It builds on the unmerged SOLID PR #15; review/merge that PR first, then retarget the Part 1 PR to main. Main currently contains the earlier authentication release:
 
 ```bat
-git clone https://github.com/JaiKaushik03/cen5064-project-Jai.git
+git clone --branch codex/tenant-owned-requests https://github.com/JaiKaushik03/cen5064-project-Jai.git
 cd cen5064-project-Jai
 py -3.13 -m venv .venv
 .venv\Scripts\activate
@@ -59,7 +59,7 @@ Tenant signup requires Full Name, Email Address, Phone Number, Address, Unit Num
 
 The optional updates checkbox starts unchecked and stores a preference only; no notifications are sent. The required terms checkbox starts unchecked. Read the versioned, nonbinding academic terms in the signup expander. The service records the acceptance time and current terms version. Signup validation errors preserve all entered fields, including both masked password inputs, so missing details can be corrected without retyping them. Successful signup confirms account creation, clears the signup form, and returns to tenant login with the saved, normalized email prefilled and an empty password. It never grants owner access.
 
-Tenant login opens a **Tenant Dashboard** showing the registered name and Logout. Owner login opens a separate **Owner Dashboard** with Logout and an **Open maintenance requests** action for the preserved workflow. Logout revokes the session token and clears application session state. URL parameters cannot select a role or grant protected-page access.
+Tenant login opens a **Tenant Dashboard** showing the registered name, **My maintenance requests**, and Logout. The request screen shares the required Property / Unit and Issue title fields, optional Description, and required Priority dropdown. A successful save resets the form to blank text and Medium priority, keeps the confirmation, and shows the saved owned row. Validation errors retain the entered data. Tenants cannot see or change another tenant's requests or use manager priority controls. Owner login opens a separate **Owner Dashboard** with Logout and an **Open maintenance requests** action for the preserved workflow. Logout revokes the session token and clears application session state. Expired protected sessions and successful new logins also clear old private drafts and feedback. URL parameters cannot select a role or grant protected-page access.
 
 ### Database setup and password protection
 
@@ -67,9 +67,9 @@ Authentication databases are created automatically and repeatably on first login
 
 | SQLite file | Stored information |
 |---|---|
-| `data/tenant_accounts.db` | Tenant ID, full name, normalized email, phone, address, unit, password hash, updates preference, terms timestamp/version, and creation timestamp. |
+| `data/tenant_accounts.db` | Tenant ID, stable account key, full name, normalized email, phone, address, unit, password hash, updates preference, terms timestamp/version, and creation timestamp. |
 | `data/owner_accounts.db` | Owner ID, normalized email, password hash, and creation timestamp. |
-| `data/propertycare.db` | Existing maintenance requests; kept separate and initialized when the owner opens that workspace. |
+| `data/propertycare.db` | Maintenance requests, optional tenant ownership key, priority and status; initialized when an authorized tenant or owner opens their request screen. |
 
 `PROPERTYCARE_AUTH_DATA_DIR` optionally selects another directory for the two fixed authentication filenames. `PROPERTYCARE_DB_PATH` still overrides only the maintenance database. Tests and browser checks use isolated directories/files. Credential stores reject a file that already contains the opposite account table or a maintenance table; the app rejects a maintenance path pointing at an authentication file. No existing database is overwritten. Database files are ignored by Git.
 
@@ -77,7 +77,7 @@ Passwords use salted **Argon2id** through pinned [argon2-cffi](https://pypi.org/
 
 Authentication session state contains an opaque random token, not a password or a browser-supplied role. The server resolves its role/account/store identity and rechecks the database account. Password inputs necessarily exist transiently in Streamlit's widget memory while being entered; callbacks clear them after every login attempt, successful signup, navigation, and logout. After a failed signup, both masked password inputs remain only in the active form for correction; they are cleared when the user leaves signup. No plaintext password is retained in the authenticated session, stored in account rows, or logged. This is a local course application; public deployment, rate limiting, email verification, password recovery, and a production identity provider are separate work.
 
-The existing maintenance schema migration is unchanged. If `status` is missing, the repository adds `status TEXT NOT NULL DEFAULT 'Open'` in a transaction. Old rows become Open, and IDs, fields, priorities, timestamps, and the ID sequence are preserved. Repeated initialization does not recreate the table or add duplicate columns. Open/Completed remains the current minimal state model; no completion UI is added here.
+The existing status migration is retained. If `status` is missing, the repository adds `status TEXT NOT NULL DEFAULT 'Open'` in a transaction. Old rows become Open, and IDs, fields, priorities, timestamps, and the ID sequence are preserved. Repeated initialization does not recreate the table or add duplicate columns. Part 1 also adds a nullable `tenant_key` column and index without assigning old rows. Open/Completed remains the current minimal state model; no completion UI is added here.
 
 ## How to test
 
@@ -88,7 +88,7 @@ python -m pip install -r requirements-dev.txt
 python -m pytest -q
 ```
 
-Tests cover separate-store login, cross-role rejection, signup/profile/password/consent rules, secure hashes, opt-in/idempotent seeding, store identity, persistence, protected routes, logout, and the preserved maintenance rules/SQLite/screen flows. The SOLID review branch contains **184 tests** (the merged authentication baseline has 173). The previous 75 cases remain, with maintenance screen tests now performing real owner login before their original assertions.
+Tests cover separate-store login, cross-role rejection, signup/profile/password/consent rules, secure hashes, opt-in/idempotent seeding, store identity, persistence, protected routes, logout, and the preserved maintenance rules/SQLite/screen flows. The Part 1 branch contains **225 tests**: all 184 SOLID-branch cases plus 41 ownership/migration/tenant-screen cases. Merged main has the earlier 173-case authentication baseline. The previous 75 cases remain, with maintenance screen tests now performing real owner login before their original assertions.
 
 Run the professor's two required service/SQLite cases separately with:
 
@@ -103,9 +103,9 @@ The allowed case saves an Open request, changes Medium to High, checks every sto
 | Layer | Implementing files | Responsibility |
 |---|---|---|
 | Presentation | `app.py`, `src/presentation/auth_views.py`, `src/presentation/maintenance_view.py` | Composition and guarded routing, login/signup/landing screens, session/widget callbacks, and the preserved owner maintenance UI. No SQL. |
-| Service | `src/services/authentication_service.py`, `authentication_ports.py`, `passwords.py`, `demo_accounts.py`, `owner_maintenance_service.py`, and the existing maintenance service | Signup/login through service-owned interfaces, injected Argon2id/SQLite adapters, opaque server sessions and role/store checks, explicit demo setup, and protected maintenance delegation. |
-| Domain | `src/domain/accounts.py` and existing maintenance/priority/status modules | Immutable account/profile data, email/phone/password/consent rules, roles, and existing maintenance validation. No UI, hashing-library, or database dependency. |
-| Data | `src/data/account_repositories.py`, `src/data/maintenance_request_repository.py` | Separate tenant/owner SQLite stores, bound reads/inserts, uniqueness and store separation, transaction/connection cleanup, and unchanged maintenance migration/storage. |
+| Service | `src/services/authentication_service.py`, `authentication_ports.py`, `passwords.py`, `demo_accounts.py`, `owner_maintenance_service.py`, `tenant_maintenance_service.py`, and the existing maintenance service | Signup/login through service-owned interfaces, injected Argon2id/SQLite adapters, opaque server sessions and role/store checks, explicit demo setup, owner-authorized maintenance delegation and tenant-scoped request use cases. |
+| Domain | `src/domain/accounts.py` and existing maintenance/priority/status modules | Immutable account/profile data, email/phone/password/consent rules, roles, stable tenant/request identity, and existing maintenance validation. No UI, hashing-library, or database dependency. |
+| Data | `src/data/account_repositories.py`, `src/data/maintenance_request_repository.py` | Separate tenant/owner SQLite stores, bound reads/inserts, uniqueness and store separation, transaction/connection cleanup, repeatable ownership migrations and tenant-filtered request queries. |
 
 ```mermaid
 flowchart LR
@@ -116,6 +116,10 @@ flowchart LR
     A --> OR[Owner repository]
     TR --> TD[(tenant_accounts.db)]
     OR --> OD[(owner_accounts.db)]
+    UI -->|tenant only| T[TenantMaintenanceService]
+    T -->|current tenant account| A
+    T --> DM[MaintenanceRequest Domain]
+    T -->|filter by stable tenant key| MR[Maintenance repository]
     UI -->|owner only| G[OwnerMaintenanceService]
     G -->|check current session| A
     G --> M[Existing maintenance service]
@@ -160,9 +164,37 @@ and the full suite with `python -m pytest -q`. See [the refactor explanation and
 verification](docs/solid-refactor.md). Tenant-owned requests and the remaining
 owner features are separate work.
 
+## Part 1: tenant-owned requests and history
+
+[Issue #16](https://github.com/JaiKaushik03/cen5064-project-Jai/issues/16) tracks
+`codex/tenant-owned-requests`. Its PR targets `codex/solid-authentication-dip`
+while [PR #15](https://github.com/JaiKaushik03/cen5064-project-Jai/pull/15) awaits
+review. This keeps the new diff focused. After #15 merges, retarget the Part 1
+PR to main and recheck CI before considering its merge.
+
+Tenant request ownership uses a persistent UUID account key. It is independent
+of the account's numeric ID, email spelling and database path. Service obtains
+the current account from the server-issued session for every submit/list/lookup;
+forms and URLs cannot choose the owner. Repository queries bind the key in SQL.
+Another tenant's request ID and a missing ID produce the same not-found result.
+
+On an existing tenant database, initialization adds `account_key`, backfills one
+UUID per account, and creates a unique index in one transaction. The keys survive
+restarts and relocation. The request migration adds nullable `tenant_key` and an
+index in its own transaction; all existing rows stay NULL and owner-only. No IDs,
+hashes, original fields or sequences are rebuilt. Repeated setup does not change
+assigned keys. Sessions also bind the tenant key so a replacement account cannot
+reuse an earlier tenant's session or inherit history through a reused numeric ID.
+
+The two files remain separate SQLite stores; Service enforces their relationship.
+Keep account and request database backups together to preserve ownership links.
+The current property/unit label is required free-form text, not a registered-unit
+authorization system. Tenant contact snapshots, the new owner Active Issues view,
+and completion UI remain Parts 2 and 3. See [migration and verification details](docs/tenant-request-verification.md).
+
 ## Maintenance request workflow
 
-**Preserved owner-only flow:** In Owner Dashboard, open maintenance requests. The owner submits a legacy request -> service validates by creating the
+**Preserved owner workspace:** In Owner Dashboard, open maintenance requests. The owner submits a legacy request -> service validates by creating the
 domain model -> SQLite repository saves -> service loads saved requests ->
 Streamlit displays confirmation and the stored record.
 
@@ -198,29 +230,34 @@ The submission Priority starts at Medium and resets to Medium after a successful
 | [ADR 001: Layered Architecture](docs/adr/adr-001-layered-architecture.md) | accepted |
 | [ADR 002: SQLite Persistence](docs/adr/adr-002-sqlite-persistence.md) | accepted |
 | [ADR 003: Separate authentication stores and protected legacy workspace](docs/adr/adr-003-separate-authentication.md) | accepted; October 25 follow-up recorded |
+| [ADR 004: Stable tenant/request ownership](docs/adr/adr-004-tenant-request-ownership.md) | proposed in Part 1 PR |
 
 The original ADR template and worked example remain as course references.
 They are not counted as PropertyCare decisions.
 
 ## CI
 
-GitHub Actions uses Python 3.13 and runs `python -m pytest -q` for pushes to `main` and pull requests targeting `main`. The badge at the top shows CI for pushes to `main`.
+GitHub Actions uses Python 3.13 and runs `python -m pytest -q` for pushes to `main` and pull requests targeting `main` or `codex/**` branches. The feature-branch filter supports the separate stacked review PRs. The badge at the top shows CI for pushes to `main`.
 
 ## Demo
 
-1. Run the setup command, start Streamlit, and open http://localhost:8501.
-2. Log in as `user1@login.com` / `user1`. Show the registered name, private Tenant Dashboard, and Logout.
-3. Click Sign Up, show the required profile/password fields, optional updates, and required academic terms. Create a fictional account and log in with it.
-4. Log out. Open Login as Owner and use `admin@admin.com` / `admin`. Show the Owner Dashboard.
-5. Open maintenance requests. Submit a request, observe the reset/saved row, and change its priority from Medium to High. Domain still rejects Completed fixtures.
-6. Log out and show that protected data disappears. Stop/restart the server and log in again to demonstrate account and maintenance persistence.
-7. Show the architecture, passing feature-PR tests, and the separate databases. Do not claim tenant-owned requests, Active/Fixed Issues, or a completion action are implemented.
+1. Run demo setup, start Streamlit, and open http://localhost:8501.
+2. Log in as `user1@login.com` / `user1`, then open **My maintenance requests**.
+3. Submit a fictional request. Show its confirmation, form reset and saved row.
+4. Log out and log in as `user2@login.com` / `user2`. User 1's request is absent;
+   user 2 can submit a separate request and see only their own history.
+5. Log out and use **Login as Owner** with `admin@admin.com` / `admin`.
+   Open the existing workspace to see all requests, including unassigned legacy rows.
+6. Change an Open request's priority. Completed fixtures still reject changes;
+   no completion button is implemented yet.
+7. Stop/restart the app, log in as each tenant again, and show private persisted
+   history. Signup and the earlier validation/password-retention/email-prefill flow remain available.
 
 ## Semester scope and future work
 
-The broader design still includes registered properties/units, tenant-to-request ownership, owner Active Issues and Fixed Issues tables, confirmed Mark Fixed actions, assignment, optional images, maintenance history, and repair costs. These are **planned**, not implemented by this authentication PR. The full owner portal in Issue #1 remains unfinished.
+The broader design still includes registered properties/units, owner Active Issues and Fixed Issues tables, confirmed Mark Fixed actions, assignment, optional images, maintenance history, and repair costs. These are **planned**, not implemented by this authentication PR. The full owner portal in Issue #1 remains unfinished.
 
-The exact future fields, required dialog/checkbox/Submit sequence, data retention, timestamps, owner-only access, and Domain transition responsibilities are recorded in [the future owner workflow](docs/future-owner-workflow.md). No tenant/request ownership migration is made today, and the current Completed state is not renamed to Fixed.
+The exact future fields, required dialog/checkbox/Submit sequence, data retention, timestamps, owner-only access, and Domain transition responsibilities are recorded in [the future owner workflow](docs/future-owner-workflow.md). Part 1 implements the ownership migration and private tenant history; the current Completed state is not renamed to Fixed.
 
 The original C4/UML diagrams and priority/image design remain in [the planned full-semester design](docs/planned-design.md).
 [Issue #5](https://github.com/JaiKaushik03/cen5064-project-Jai/issues/5) tracks the maintenance request workflow.
@@ -236,7 +273,8 @@ The original C4/UML diagrams and priority/image design remain in [the planned fu
 | Submit, validate, save, and display maintenance requests | Implemented | [Issue #5](https://github.com/JaiKaushik03/cen5064-project-Jai/issues/5), [PR #7](https://github.com/JaiKaushik03/cen5064-project-Jai/pull/7) |
 | Change priority for Open requests; reject Completed requests | Implemented, with partner feedback addressed | [PR #9](https://github.com/JaiKaushik03/cen5064-project-Jai/pull/9) |
 | Tenant/owner login, tenant signup, protected landing pages | Implemented; partner signup feedback addressed | [Issue #12](https://github.com/JaiKaushik03/cen5064-project-Jai/issues/12) |
-| Full owner portal and tenant-owned request visibility | Planned; not implemented | [Issue #1](https://github.com/JaiKaushik03/cen5064-project-Jai/issues/1) |
+| Full owner portal with tenant contact details and assigned work | Planned; not implemented | [Issue #1](https://github.com/JaiKaushik03/cen5064-project-Jai/issues/1) |
+| Tenant-owned request submission and personal history | Implemented on Part 1 review branch; unmerged | [Issue #16](https://github.com/JaiKaushik03/cen5064-project-Jai/issues/16) |
 | Completion action and manual lifecycle demonstration | Planned; not implemented | [Issue #10](https://github.com/JaiKaushik03/cen5064-project-Jai/issues/10) |
 
 ## Development and verification
@@ -267,3 +305,5 @@ GoldLion72 reviewed the priority-change implementation in [PR #9](https://github
 - Oct 25 partner-review follow-up: GoldLion72 suggested preserving signup passwords after validation errors and prefilling the login email after account creation. Codex implemented both using form callbacks, added retry/navigation/prefill regression checks, and ran all 173 tests successfully. Jai authorized merging the corrected PR after verification; the partner review remains COMMENTED, with no formal approval claimed.
 
 - Oct 30–31: Refactored authentication around service-owned account/password interfaces for Lecture 5 Dependency Inversion. Added independent in-memory tests, retained the 173-case baseline, and verified 184 passing tests plus the unchanged browser workflows. The SOLID PR is awaiting partner review.
+
+- Oct 31: Added Part 1 tenant-owned requests and private history, stable account keys, repeatable legacy migrations, session/draft isolation and 41 new cases. Full branch suite: 225 passed. Verified two-tenant privacy and restart behavior in Chrome against isolated data; verified migration copies preserve existing records. The Part 1 PR remains separate and unmerged for review.

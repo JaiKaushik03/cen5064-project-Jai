@@ -47,9 +47,9 @@ def change_request_priority(service):
         )
 
 
-def render_maintenance(service):
-    """Render the existing workflow through an owner-authorized service adapter."""
-    st.title("PropertyCare")
+def render_maintenance(service, *, tenant=False):
+    """Share form/history rendering; tenant services enforce ownership on every call."""
+    st.title("My maintenance requests" if tenant else "PropertyCare")
     st.caption("Report a maintenance issue and view saved requests.")
 
     # Session state is the single source for initial values and callback resets.
@@ -76,7 +76,7 @@ def render_maintenance(service):
     if st.session_state.get("submission_success"):
         st.success(st.session_state["submission_success"])
 
-    st.subheader("Saved maintenance requests")
+    st.subheader("My saved requests" if tenant else "Saved maintenance requests")
     st.button("Refresh saved requests")
     requests = service.list_requests()
     if not requests:
@@ -97,6 +97,9 @@ def render_maintenance(service):
                 for request in requests
             ]
         )
+
+    if tenant:
+        return
 
     st.subheader("Manager - Change Request Priority")
     st.caption(

@@ -75,6 +75,8 @@ def login(authentication, role):
         st.session_state["auth_error"] = str(error)
     else:
         authentication.logout(st.session_state.get("auth_token"))
+        # A newly authenticated account starts without another account's draft or feedback.
+        st.session_state.clear()
         st.session_state["auth_token"] = token
         st.session_state["auth_page"] = f"{prefix}_dashboard"
     finally:
