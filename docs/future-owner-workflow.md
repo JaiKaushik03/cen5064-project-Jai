@@ -1,19 +1,24 @@
 # Future owner issue-management workflow
 
-**Status:** planned only. This specification records Jai's October 24 requirements;
-it is not implemented by the authentication/signup PR. Related: broader Issue #1
+**Status:** Part 1 ownership is implemented on its review branch; the owner
+Active/Fixed workflow remains planned. This records Jai's October 24 requirements. Related: broader Issue #1
 and completion Issue #10.
 
 ## Tenant/request ownership first
 
-A future tenant submission must be associated with the authenticated tenant's
-account, using server-validated identity. Do not trust a tenant ID or role supplied
-in a URL or form. Define a non-destructive migration for legacy requests and the
-tenant/profile association before enabling tenant-specific request screens.
+Part 1 associates new requests with the authenticated account's stable UUID key.
+Service validates the current session on every operation; request forms and URLs
+cannot supply an owner. Tenant history and ID lookup filter by that key. The
+repeatable account/request migrations preserve existing fields and sequences.
 
-Today the existing shared request workspace is owner-only. The Tenant Dashboard
-does not submit or list requests; no tenant ownership columns or migration have
-been added to the maintenance database.
+Legacy requests have no verified tenant association and remain unassigned,
+visible only in the existing owner workspace. No automatic matching uses unit
+labels or email. New account creation cannot reuse a previous account's history
+through the same numeric ID. Parts 2 and 3 build on this association.
+
+Tenant contact details are still stored in the account database, not snapshotted
+onto requests. Part 2 must define/capture the requested historical contact snapshot
+before profile editing is introduced. No profile editing exists in Part 1.
 
 ## Active Issues table
 
