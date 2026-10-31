@@ -55,7 +55,7 @@ def main():
     authentication.require_session(token, AccountRole.OWNER)
     if page == "owner_maintenance":
         path = Path(os.environ.get("PROPERTYCARE_DB_PATH", str(Path(__file__).resolve().parent / "data/propertycare.db")))
-        if path.resolve() in {authentication.tenants.database_path, authentication.owners.database_path}:
+        if path.resolve() in {Path(authentication.tenants.identity), Path(authentication.owners.identity)}:
             st.error("Authentication and maintenance databases must be separate.")
             st.button("Logout", on_click=logout, args=(authentication,))
             return

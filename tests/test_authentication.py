@@ -157,7 +157,7 @@ def test_account_models_refuse_plaintext_password_storage():
         OwnerAccount("owner@example.com", "admin")
 
 
-def test_separate_stores_initialize_twice_and_refuse_mixed_databases(stores, account_hash):
+def test_separate_stores_initialize_twice_and_refuse_mixed_databases(stores, account_hash, passwords):
     tenants, owners = stores
     owner = owners.save(OwnerAccount("owner@example.com", account_hash))
     assert OwnerAccountRepository(owners.database_path).get_by_id(owner.id) == owner
@@ -169,7 +169,7 @@ def test_separate_stores_initialize_twice_and_refuse_mixed_databases(stores, acc
     with closing(sqlite3.connect(tenants.database_path)) as connection:
         assert not connection.execute("SELECT name FROM sqlite_master WHERE name = 'owner_accounts'").fetchall()
     with pytest.raises(ValueError, match="correct identity"):
-        AuthenticationService(owners, tenants)
+        AuthenticationService(owners, tenants, passwords=passwords)
 
 
 def test_auth_store_cannot_be_initialized_over_maintenance_database(tmp_path):
@@ -242,7 +242,7 @@ def test_tenant_owner_login_cross_rejection_persistence_and_logout(authenticatio
             method(email, password)
         assert str(caught.value) == INVALID_CREDENTIALS
     restarted = AuthenticationService(TenantAccountRepository(stores[0].database_path),
-                                      OwnerAccountRepository(stores[1].database_path))
+                                      OwnerAccountRepository(stores[1].database_path), passwords=authentication.passwords)
     assert restarted.resolve_session(tenant_token) is None
     assert restarted.resolve_session(restarted.login_tenant("new@example.com", "StrongTenant2026!")).display_name == "Demo Tenant"
     authentication.logout(tenant_token)
