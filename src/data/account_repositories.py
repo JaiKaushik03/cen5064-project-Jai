@@ -5,7 +5,7 @@ from dataclasses import replace
 from pathlib import Path
 import sqlite3
 
-from src.domain.accounts import DuplicateEmailError, OwnerAccount, TenantAccount, TenantProfile
+from src.domain.accounts import AccountRole, DuplicateEmailError, OwnerAccount, TenantAccount, TenantProfile
 
 
 class _AccountRepository:
@@ -50,6 +50,7 @@ class _AccountRepository:
 
 
 class TenantAccountRepository(_AccountRepository):
+    role = AccountRole.TENANT
     table_name = "tenant_accounts"
     forbidden_table = "owner_accounts"
     schema = """CREATE TABLE IF NOT EXISTS tenant_accounts (
@@ -96,6 +97,7 @@ class TenantAccountRepository(_AccountRepository):
 
 
 class OwnerAccountRepository(_AccountRepository):
+    role = AccountRole.OWNER
     table_name = "owner_accounts"
     forbidden_table = "tenant_accounts"
     schema = """CREATE TABLE IF NOT EXISTS owner_accounts (

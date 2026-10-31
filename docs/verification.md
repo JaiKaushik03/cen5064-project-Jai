@@ -305,3 +305,16 @@ and checks. This supersedes the October 24 stop instruction; it does not turn
 the partner's comments into a formal approval. See the updated
 [authentication verification record](authentication-verification.md) and PR #13
 for the latest-head CI and merge receipt. Broader owner features remain future work.
+
+
+## October 30–31: Lecture 5 Dependency Inversion refactor
+
+Main `f764c93` was clean and matched GitHub, with **173 passing tests**.
+The focused authentication refactor replaces concrete repository coupling and
+implicit password-adapter construction with service-owned protocols and explicit
+startup injection. The expanded suite passes **184 tests**, with no broken
+dependencies or whitespace errors. Chrome checks against isolated stores confirm
+login separation, signup validation/retry and prefill, owner maintenance save/reset,
+priority changes and logout. Original local account/request database hashes remain
+unchanged. See [the refactor record](solid-refactor.md). Issue #14 and its PR are
+for partner review; no review, approval or merge is claimed.
