@@ -60,6 +60,10 @@ def main():
         authentication.require_session(token, AccountRole.TENANT)
         if page == "tenant_maintenance":
             try:
+                account = authentication.get_tenant_account(token)
+                st.session_state.setdefault(
+                    "property_unit", f"{account.profile.address} / Unit {account.profile.unit_number}"
+                )
                 service = TenantMaintenanceService(
                     authentication, lambda: st.session_state.get("auth_token"),
                     request_repository(authentication),

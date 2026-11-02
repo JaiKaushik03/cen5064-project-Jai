@@ -1,12 +1,12 @@
 # Part 1: tenant requests and private history verification
 
-## Review scope
+## Initial review scope
 
 Branch: `codex/tenant-owned-requests`, based on SOLID commit `5cd18b0` from PR #15.
 Issue #16 covers only tenant submission/history and the ownership migration.
 The feature PR targets `codex/solid-authentication-dip` so its diff excludes that
 refactor. Review and merge #15 first, then retarget this PR to main and rerun CI.
-Neither PR is approved or merged by this handoff.
+That initial handoff left both PRs open for review. The November 1 follow-up below supersedes that stopping point.
 
 ## Actual automated results
 
@@ -77,3 +77,22 @@ snapshots must be defined before profile editing. Mark Fixed, the confirmation
 dialog and Fixed Issues history are Part 3. Existing owner-created requests remain
 unassigned. Tenant priority editing, completion, deletion, assignment, costs and
 photos are not implemented by this PR. Keep account and request backups together.
+
+
+## November 1 review follow-up
+
+The SOLID review's accepted alternative was documented: demo seeding remains
+outside that focused policy refactor. PR #15 then merged into main.
+
+The Part 1 review confirmed two-user request isolation and suggested prefilling
+the tenant's saved address and unit. The request route now initializes the
+editable Property / Unit field from that authenticated profile only when the
+field has no state. It does not overwrite edited or failed values, and the
+existing successful-submission reset leaves the field blank. A new account's
+login clears previous account state before its own profile default is applied.
+
+Two additional cases cover both tenant defaults, edits, validation and refresh;
+the existing successful-reset and cross-account cases remain. The current suite
+has 227 cases. Final local and CI results and the actual merge receipt are recorded
+on PR #17 after verification. The recorded reviews are comments rather than formal
+approvals; normal merge was explicitly authorized after addressing them.

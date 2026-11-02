@@ -1,7 +1,7 @@
 # ADR 004: Stable tenant/request ownership
 
 **Date:** 2026-10-31
-**Status:** proposed for Part 1 partner review
+**Status:** accepted; November 1 review follow-up
 
 ## Context
 

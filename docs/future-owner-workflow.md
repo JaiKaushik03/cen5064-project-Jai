@@ -1,6 +1,6 @@
 # Future owner issue-management workflow
 
-**Status:** Part 1 ownership is implemented on its review branch; the owner
+**Status:** Part 1 ownership is implemented; the owner
 Active/Fixed workflow remains planned. This records Jai's October 24 requirements. Related: broader Issue #1
 and completion Issue #10.
 

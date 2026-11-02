@@ -185,7 +185,29 @@ def test_expired_session_then_another_login_cannot_reuse_private_drafts_or_feedb
     assert screen.title[0].value == "PropertyCare"
     open_tenant(screen, 2)
     assert titles(screen) == ["Tenant 2 private request"]
-    assert screen.text_input(key="property_unit").value == ""
+    assert screen.text_input(key="property_unit").value == "123 Fictional Lane / Unit Demo 2A"
     assert screen.text_input(key="title").value == ""
     assert screen.text_area(key="description").value == ""
     assert not screen.success
+
+
+@pytest.mark.parametrize("number", [1, 2])
+def test_tenant_profile_prefill_is_editable_and_preserves_failed_input(tenant_app, number):
+    screen, _, _, _ = tenant_app
+    open_tenant(screen, number)
+    assert screen.text_input(key="property_unit").value == f"123 Fictional Lane / Unit Demo {number}A"
+    screen.text_input(key="property_unit").set_value("Edited fictional location")
+    # Submit the form before refreshing: Streamlit batches unsent form edits.
+    button(screen, "Submit request").click().run()
+    assert "Issue title" in screen.error[0].value
+    assert screen.text_input(key="property_unit").value == "Edited fictional location"
+    button(screen, "Refresh saved requests").click().run()
+    assert not screen.exception
+    assert screen.text_input(key="property_unit").value == "Edited fictional location"
+    screen.text_input(key="property_unit").set_value("")
+    screen.text_input(key="title").set_value("Missing location test")
+    button(screen, "Submit request").click().run()
+    assert not screen.exception
+    assert "Property / Unit" in screen.error[0].value
+    assert screen.text_input(key="property_unit").value == ""
+    assert screen.text_input(key="title").value == "Missing location test"

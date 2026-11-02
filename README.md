@@ -6,7 +6,7 @@
 
 ## Project
 
-PropertyCare is a rental maintenance and work-order project for tenants, property managers, and maintenance contractors. The implemented authentication includes tenant login/signup, a separate owner login, persistent accounts and protected dashboards. This Part 1 review branch connects tenants to private request submission and history.
+PropertyCare is a rental maintenance and work-order project for tenants, property managers, and maintenance contractors. The implemented authentication includes tenant login/signup, a separate owner login, persistent accounts and protected dashboards. Part 1 connects tenants to private request submission and history.
 
 Tenants use **My maintenance requests** to submit and view only their own requests. Ownership comes from the signed-in account. The existing owner workspace can still view all requests and change allowed priorities. Older unassigned requests remain owner-only; the app never guesses a tenant from an old unit label. Domain still rejects priority changes to Completed requests.
 
@@ -14,10 +14,10 @@ Tenants use **My maintenance requests** to submit and view only their own reques
 
 ## How to run
 
-Requirements: Git and Python **3.13**. These Windows Command Prompt commands clone the Part 1 review branch. It builds on the unmerged SOLID PR #15; review/merge that PR first, then retarget the Part 1 PR to main. Main currently contains the earlier authentication release:
+Requirements: Git and Python **3.13**. Use these Windows Command Prompt commands to clone main and run the local application:
 
 ```bat
-git clone --branch codex/tenant-owned-requests https://github.com/JaiKaushik03/cen5064-project-Jai.git
+git clone https://github.com/JaiKaushik03/cen5064-project-Jai.git
 cd cen5064-project-Jai
 py -3.13 -m venv .venv
 .venv\Scripts\activate
@@ -59,7 +59,7 @@ Tenant signup requires Full Name, Email Address, Phone Number, Address, Unit Num
 
 The optional updates checkbox starts unchecked and stores a preference only; no notifications are sent. The required terms checkbox starts unchecked. Read the versioned, nonbinding academic terms in the signup expander. The service records the acceptance time and current terms version. Signup validation errors preserve all entered fields, including both masked password inputs, so missing details can be corrected without retyping them. Successful signup confirms account creation, clears the signup form, and returns to tenant login with the saved, normalized email prefilled and an empty password. It never grants owner access.
 
-Tenant login opens a **Tenant Dashboard** showing the registered name, **My maintenance requests**, and Logout. The request screen shares the required Property / Unit and Issue title fields, optional Description, and required Priority dropdown. A successful save resets the form to blank text and Medium priority, keeps the confirmation, and shows the saved owned row. Validation errors retain the entered data. Tenants cannot see or change another tenant's requests or use manager priority controls. Owner login opens a separate **Owner Dashboard** with Logout and an **Open maintenance requests** action for the preserved workflow. Logout revokes the session token and clears application session state. Expired protected sessions and successful new logins also clear old private drafts and feedback. URL parameters cannot select a role or grant protected-page access.
+Tenant login opens a **Tenant Dashboard** showing the registered name, **My maintenance requests**, and Logout. The request screen prefills Property / Unit from the saved tenant address and unit on first opening. That value is editable, failed submissions retain it, and a successful save still clears it. The screen shares the required Property / Unit and Issue title fields, optional Description, and required Priority dropdown. A successful save resets the form to blank text and Medium priority, keeps the confirmation, and shows the saved owned row. Validation errors retain the entered data. Tenants cannot see or change another tenant's requests or use manager priority controls. Owner login opens a separate **Owner Dashboard** with Logout and an **Open maintenance requests** action for the preserved workflow. Logout revokes the session token and clears application session state. Expired protected sessions and successful new logins also clear old private drafts and feedback. URL parameters cannot select a role or grant protected-page access.
 
 ### Database setup and password protection
 
@@ -88,7 +88,7 @@ python -m pip install -r requirements-dev.txt
 python -m pytest -q
 ```
 
-Tests cover separate-store login, cross-role rejection, signup/profile/password/consent rules, secure hashes, opt-in/idempotent seeding, store identity, persistence, protected routes, logout, and the preserved maintenance rules/SQLite/screen flows. The Part 1 branch contains **225 tests**: all 184 SOLID-branch cases plus 41 ownership/migration/tenant-screen cases. Merged main has the earlier 173-case authentication baseline. The previous 75 cases remain, with maintenance screen tests now performing real owner login before their original assertions.
+Tests cover separate-store login, cross-role rejection, signup/profile/password/consent rules, secure hashes, opt-in/idempotent seeding, store identity, persistence, protected routes, logout, and the preserved maintenance rules/SQLite/screen flows. The complete suite contains **227 tests**: the 184-case SOLID baseline plus 43 ownership/migration/tenant-screen cases. The previous 75 cases remain, with maintenance screen tests now performing real owner login before their original assertions.
 
 Run the professor's two required service/SQLite cases separately with:
 
@@ -131,8 +131,9 @@ flowchart LR
 ### SOLID refactor: Dependency Inversion
 
 The Lecture 5 refactor is tracked by [Issue #14](https://github.com/JaiKaushik03/cen5064-project-Jai/issues/14)
-on `codex/solid-authentication-dip`, awaiting partner review. Main's badge above
-continues to describe merged main; the refactor PR checks describe this branch.
+and [PR #15](https://github.com/JaiKaushik03/cen5064-project-Jai/pull/15). Its review
+clarification records that the demo seeder is separate from the authentication
+policy refactor.
 
 `AuthenticationService` already accepted repository arguments, but it imported
 the concrete SQLite classes, rejected other implementations, compared database
@@ -166,11 +167,10 @@ owner features are separate work.
 
 ## Part 1: tenant-owned requests and history
 
-[Issue #16](https://github.com/JaiKaushik03/cen5064-project-Jai/issues/16) tracks
-`codex/tenant-owned-requests`. Its PR targets `codex/solid-authentication-dip`
-while [PR #15](https://github.com/JaiKaushik03/cen5064-project-Jai/pull/15) awaits
-review. This keeps the new diff focused. After #15 merges, retarget the Part 1
-PR to main and recheck CI before considering its merge.
+[Issue #16](https://github.com/JaiKaushik03/cen5064-project-Jai/issues/16) and
+[PR #17](https://github.com/JaiKaushik03/cen5064-project-Jai/pull/17) track tenant
+submission and personal history. The feature was reviewed separately from the
+SOLID refactor; PR #17 records the latest checks and merge result.
 
 Tenant request ownership uses a persistent UUID account key. It is independent
 of the account's numeric ID, email spelling and database path. Service obtains
@@ -230,7 +230,7 @@ The submission Priority starts at Medium and resets to Medium after a successful
 | [ADR 001: Layered Architecture](docs/adr/adr-001-layered-architecture.md) | accepted |
 | [ADR 002: SQLite Persistence](docs/adr/adr-002-sqlite-persistence.md) | accepted |
 | [ADR 003: Separate authentication stores and protected legacy workspace](docs/adr/adr-003-separate-authentication.md) | accepted; October 25 follow-up recorded |
-| [ADR 004: Stable tenant/request ownership](docs/adr/adr-004-tenant-request-ownership.md) | proposed in Part 1 PR |
+| [ADR 004: Stable tenant/request ownership](docs/adr/adr-004-tenant-request-ownership.md) | accepted; Part 1 review feedback addressed |
 
 The original ADR template and worked example remain as course references.
 They are not counted as PropertyCare decisions.
@@ -274,7 +274,7 @@ The original C4/UML diagrams and priority/image design remain in [the planned fu
 | Change priority for Open requests; reject Completed requests | Implemented, with partner feedback addressed | [PR #9](https://github.com/JaiKaushik03/cen5064-project-Jai/pull/9) |
 | Tenant/owner login, tenant signup, protected landing pages | Implemented; partner signup feedback addressed | [Issue #12](https://github.com/JaiKaushik03/cen5064-project-Jai/issues/12) |
 | Full owner portal with tenant contact details and assigned work | Planned; not implemented | [Issue #1](https://github.com/JaiKaushik03/cen5064-project-Jai/issues/1) |
-| Tenant-owned request submission and personal history | Implemented on Part 1 review branch; unmerged | [Issue #16](https://github.com/JaiKaushik03/cen5064-project-Jai/issues/16) |
+| Tenant-owned request submission and personal history | Implemented; tenant profile-prefill feedback addressed | [Issue #16](https://github.com/JaiKaushik03/cen5064-project-Jai/issues/16) |
 | Completion action and manual lifecycle demonstration | Planned; not implemented | [Issue #10](https://github.com/JaiKaushik03/cen5064-project-Jai/issues/10) |
 
 ## Development and verification
@@ -307,3 +307,5 @@ GoldLion72 reviewed the priority-change implementation in [PR #9](https://github
 - Oct 30–31: Refactored authentication around service-owned account/password interfaces for Lecture 5 Dependency Inversion. Added independent in-memory tests, retained the 173-case baseline, and verified 184 passing tests plus the unchanged browser workflows. The SOLID PR is awaiting partner review.
 
 - Oct 31: Added Part 1 tenant-owned requests and private history, stable account keys, repeatable legacy migrations, session/draft isolation and 41 new cases. Full branch suite: 225 passed. Verified two-tenant privacy and restart behavior in Chrome against isolated data; verified migration copies preserve existing records. The Part 1 PR remains separate and unmerged for review.
+
+- Nov 1 review follow-up: Recorded the demo seeder boundary and added editable tenant address/unit prefill. Validation errors preserve entered location values; successful submissions still clear the form. PR #15 and PR #17 record the verification and merge results.
