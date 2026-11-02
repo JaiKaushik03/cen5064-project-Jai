@@ -5,6 +5,7 @@ from dataclasses import replace
 from pathlib import Path
 import sqlite3
 
+from src.domain.accounts import normalize_account_key
 from src.domain.maintenance_request import MaintenanceRequest
 
 
@@ -24,7 +25,8 @@ class MaintenanceRequestRepository:
                     description TEXT NOT NULL,
                     priority TEXT NOT NULL,
                     created_at TEXT NOT NULL,
-                    status TEXT NOT NULL DEFAULT 'Open'
+                    status TEXT NOT NULL DEFAULT 'Open',
+                    tenant_key TEXT
                 )
                 """
             )
@@ -39,6 +41,11 @@ class MaintenanceRequestRepository:
                     "ADD COLUMN status TEXT NOT NULL DEFAULT 'Open'"
                 )
 
+            if "tenant_key" not in columns:
+                connection.execute("ALTER TABLE maintenance_requests ADD COLUMN tenant_key TEXT")
+            connection.execute("CREATE INDEX IF NOT EXISTS maintenance_requests_tenant_key "
+                               "ON maintenance_requests(tenant_key, id)")
+
     def _connect(self):
         connection = sqlite3.connect(self.database_path)
         connection.row_factory = sqlite3.Row
@@ -49,8 +56,8 @@ class MaintenanceRequestRepository:
             cursor = connection.execute(
                 """
                 INSERT INTO maintenance_requests
-                    (property_unit, title, description, priority, created_at, status)
-                VALUES (?, ?, ?, ?, ?, ?)
+                    (property_unit, title, description, priority, created_at, status, tenant_key)
+                VALUES (?, ?, ?, ?, ?, ?, ?)
                 """,
                 (
                     request.property_unit,
@@ -59,6 +66,7 @@ class MaintenanceRequestRepository:
                     request.priority.value,
                     request.created_at,
                     request.status.value,
+                    request.tenant_key,
                 ),
             )
             return replace(request, id=cursor.lastrowid)
@@ -74,6 +82,24 @@ class MaintenanceRequestRepository:
         with closing(self._connect()) as connection:
             row = connection.execute(
                 "SELECT * FROM maintenance_requests WHERE id = ?", (request_id,)
+            ).fetchone()
+        return MaintenanceRequest(**dict(row)) if row is not None else None
+
+    def list_for_tenant(self, tenant_key: str) -> list[MaintenanceRequest]:
+        tenant_key = normalize_account_key(tenant_key)
+        with closing(self._connect()) as connection:
+            rows = connection.execute(
+                "SELECT * FROM maintenance_requests WHERE tenant_key = ? ORDER BY id DESC",
+                (tenant_key,),
+            ).fetchall()
+        return [MaintenanceRequest(**dict(row)) for row in rows]
+
+    def get_for_tenant(self, request_id: int, tenant_key: str) -> MaintenanceRequest | None:
+        tenant_key = normalize_account_key(tenant_key)
+        with closing(self._connect()) as connection:
+            row = connection.execute(
+                "SELECT * FROM maintenance_requests WHERE id = ? AND tenant_key = ?",
+                (request_id, tenant_key),
             ).fetchone()
         return MaintenanceRequest(**dict(row)) if row is not None else None
 

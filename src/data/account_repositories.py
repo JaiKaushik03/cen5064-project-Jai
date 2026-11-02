@@ -4,6 +4,7 @@ from contextlib import closing
 from dataclasses import replace
 from pathlib import Path
 import sqlite3
+from uuid import uuid4
 
 from src.domain.accounts import AccountRole, DuplicateEmailError, OwnerAccount, TenantAccount, TenantProfile
 
@@ -24,6 +25,10 @@ class _AccountRepository:
             if self.forbidden_table in tables or "maintenance_requests" in tables:
                 raise ValueError("Tenant, owner, and maintenance databases must be separate.")
             connection.execute(self.schema)
+            self._migrate(connection)
+
+    def _migrate(self, connection):
+        """Repository-specific migrations run inside the initialization transaction."""
 
     @property
     def identity(self):
@@ -55,6 +60,7 @@ class TenantAccountRepository(_AccountRepository):
     forbidden_table = "owner_accounts"
     schema = """CREATE TABLE IF NOT EXISTS tenant_accounts (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
+        account_key TEXT NOT NULL,
         full_name TEXT NOT NULL,
         email TEXT NOT NULL COLLATE NOCASE UNIQUE,
         phone_number TEXT NOT NULL,
@@ -67,19 +73,29 @@ class TenantAccountRepository(_AccountRepository):
         created_at TEXT NOT NULL
     )"""
 
+    def _migrate(self, connection):
+        columns = {row["name"] for row in connection.execute("PRAGMA table_info(tenant_accounts)")}
+        if "account_key" not in columns:
+            connection.execute("ALTER TABLE tenant_accounts ADD COLUMN account_key TEXT")
+        for row in connection.execute("SELECT id FROM tenant_accounts WHERE account_key IS NULL").fetchall():
+            connection.execute("UPDATE tenant_accounts SET account_key = ? WHERE id = ?",
+                               (str(uuid4()), row["id"]))
+        connection.execute("CREATE UNIQUE INDEX IF NOT EXISTS tenant_account_key_unique "
+                           "ON tenant_accounts(account_key)")
+
     @staticmethod
     def _from_row(row):
         profile = TenantProfile(row["full_name"], row["email"], row["phone_number"],
                                 row["address"], row["unit_number"], bool(row["updates_opt_in"]))
         return TenantAccount(profile, row["password_hash"], row["terms_accepted_at"],
-                             row["terms_version"], row["created_at"], row["id"])
+                             row["terms_version"], row["created_at"], row["id"], row["account_key"])
 
     def save(self, account: TenantAccount, *, if_missing=False):
         profile = account.profile
         sql = """INSERT INTO tenant_accounts
             (full_name, email, phone_number, address, unit_number, password_hash,
-             updates_opt_in, terms_accepted_at, terms_version, created_at)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"""
+             updates_opt_in, terms_accepted_at, terms_version, created_at, account_key)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"""
         if if_missing:
             sql += " ON CONFLICT(email) DO NOTHING"
         try:
@@ -87,7 +103,7 @@ class TenantAccountRepository(_AccountRepository):
                 cursor = connection.execute(sql, (
                     profile.full_name, profile.email, profile.phone_number, profile.address,
                     profile.unit_number, account.password_hash, int(profile.updates_opt_in),
-                    account.terms_accepted_at, account.terms_version, account.created_at,
+                    account.terms_accepted_at, account.terms_version, account.created_at, account.account_key,
                 ))
                 return replace(account, id=cursor.lastrowid) if cursor.rowcount else None
         except sqlite3.IntegrityError as error:

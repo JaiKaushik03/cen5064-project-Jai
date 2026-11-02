@@ -3,6 +3,7 @@
 from dataclasses import dataclass, field, replace
 from datetime import datetime, timezone
 
+from src.domain.accounts import normalize_account_key
 from src.domain.priority import Priority
 from src.domain.request_status import RequestStatus
 
@@ -18,8 +19,11 @@ class MaintenanceRequest:
         default_factory=lambda: datetime.now(timezone.utc).isoformat(timespec="seconds")
     )
     status: RequestStatus = RequestStatus.OPEN
+    tenant_key: str | None = None
 
     def __post_init__(self):
+        if self.tenant_key is not None:
+            object.__setattr__(self, "tenant_key", normalize_account_key(self.tenant_key))
         for name, label in (("property_unit", "Property / Unit"), ("title", "Issue title")):
             value = getattr(self, name)
             if not isinstance(value, str) or not value.strip():

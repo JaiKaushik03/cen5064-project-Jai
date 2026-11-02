@@ -318,3 +318,16 @@ login separation, signup validation/retry and prefill, owner maintenance save/re
 priority changes and logout. Original local account/request database hashes remain
 unchanged. See [the refactor record](solid-refactor.md). Issue #14 and its PR are
 for partner review; no review, approval or merge is claimed.
+
+
+## October 31: Part 1 tenant-owned requests
+
+Part 1 builds separately on the SOLID review branch. The full suite passes
+**225 tests, 0 failures**, including the 184-case base and 41 added ownership,
+privacy, migration and tenant-screen cases. Chrome checks against isolated stores
+verified two-tenant separation, failed/successful form behavior, forged URLs,
+owner compatibility and real restart persistence. Copied actual databases passed
+repeat migration checks without changing original fields or sequences; all three
+original local files remain unchanged. See [the Part 1 verification record](tenant-request-verification.md)
+and ADR 004. Issue #16 and the stacked feature PR remain open for partner review;
+retarget to main only after PR #15 merges. No approval or merge is claimed.
