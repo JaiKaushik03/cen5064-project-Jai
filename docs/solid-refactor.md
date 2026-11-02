@@ -82,3 +82,13 @@ All original local database hashes remain unchanged. No populated databases or
 verification screenshots are committed. CI results are recorded in the PR after
 GitHub completes its checks. GoldLion72 should verify that the named DIP concern
 is what the change actually fixes. The PR stays open and unmerged until review.
+
+
+## Review clarification
+
+The demo seeder is outside this authentication-policy refactor.
+`seed_demo_accounts` still creates its default password adapter when none is
+supplied. A separate cleanup can require the codec argument and construct it in
+`scripts/seed_demo_accounts.py`; this PR does not claim that every service or
+setup helper has been converted. The production authentication service itself
+requires the injected codec.
