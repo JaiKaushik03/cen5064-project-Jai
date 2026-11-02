@@ -88,7 +88,7 @@ python -m pip install -r requirements-dev.txt
 python -m pytest -q
 ```
 
-Tests cover separate-store login, cross-role rejection, signup/profile/password/consent rules, secure hashes, opt-in/idempotent seeding, store identity, persistence, protected routes, logout, and the preserved maintenance rules/SQLite/screen flows. The full suite contains **173 tests**. The previous 75 cases remain, with maintenance screen tests now performing real owner login before their original assertions.
+Tests cover separate-store login, cross-role rejection, signup/profile/password/consent rules, secure hashes, opt-in/idempotent seeding, store identity, persistence, protected routes, logout, and the preserved maintenance rules/SQLite/screen flows. The SOLID review branch contains **184 tests** (the merged authentication baseline has 173). The previous 75 cases remain, with maintenance screen tests now performing real owner login before their original assertions.
 
 Run the professor's two required service/SQLite cases separately with:
 
@@ -103,7 +103,7 @@ The allowed case saves an Open request, changes Medium to High, checks every sto
 | Layer | Implementing files | Responsibility |
 |---|---|---|
 | Presentation | `app.py`, `src/presentation/auth_views.py`, `src/presentation/maintenance_view.py` | Composition and guarded routing, login/signup/landing screens, session/widget callbacks, and the preserved owner maintenance UI. No SQL. |
-| Service | `src/services/authentication_service.py`, `passwords.py`, `demo_accounts.py`, `owner_maintenance_service.py`, and the existing maintenance service | Signup/login, Argon2id adapter, opaque server sessions and role/store checks, explicit demo setup, and protected maintenance delegation. |
+| Service | `src/services/authentication_service.py`, `authentication_ports.py`, `passwords.py`, `demo_accounts.py`, `owner_maintenance_service.py`, and the existing maintenance service | Signup/login through service-owned interfaces, injected Argon2id/SQLite adapters, opaque server sessions and role/store checks, explicit demo setup, and protected maintenance delegation. |
 | Domain | `src/domain/accounts.py` and existing maintenance/priority/status modules | Immutable account/profile data, email/phone/password/consent rules, roles, and existing maintenance validation. No UI, hashing-library, or database dependency. |
 | Data | `src/data/account_repositories.py`, `src/data/maintenance_request_repository.py` | Separate tenant/owner SQLite stores, bound reads/inserts, uniqueness and store separation, transaction/connection cleanup, and unchanged maintenance migration/storage. |
 
@@ -123,6 +123,42 @@ flowchart LR
     M --> MR[Maintenance repository]
     MR --> DB[(propertycare.db)]
 ```
+
+### SOLID refactor: Dependency Inversion
+
+The Lecture 5 refactor is tracked by [Issue #14](https://github.com/JaiKaushik03/cen5064-project-Jai/issues/14)
+on `codex/solid-authentication-dip`, awaiting partner review. Main's badge above
+continues to describe merged main; the refactor PR checks describe this branch.
+
+`AuthenticationService` already accepted repository arguments, but it imported
+the concrete SQLite classes, rejected other implementations, compared database
+paths directly, and constructed `Passwords()` when no adapter was supplied.
+That tied authentication policy to its storage and hashing implementations.
+
+The service now depends on `TenantAccountStore`, `OwnerAccountStore`, and
+`PasswordCodec` protocols in `src/services/authentication_ports.py`. The cached
+startup factory in `src/presentation/auth_views.py` supplies the existing SQLite
+repositories and Argon2id adapter. Protocols use structural typing: an adapter
+provides the required operations without inheriting from the SQLite classes.
+Store roles and distinct identities are still validated; these interfaces are
+internal startup dependencies, not a way for browser users to choose roles.
+
+The visible workflows, password settings, account files, schema, session checks,
+and earlier signup corrections remain the same. In-memory service tests prove
+that another adapter works without changing authentication policy. A fresh-process
+test also blocks SQLite/Argon2 adapter imports when importing that policy.
+
+For a separate review clone:
+
+```bash
+git clone --branch codex/solid-authentication-dip https://github.com/JaiKaushik03/cen5064-project-Jai.git propertycare-solid-review
+```
+
+Use the normal environment, installation and demo setup commands inside that
+clone. Run the focused tests with `python -m pytest -q tests/test_authentication_ports.py`
+and the full suite with `python -m pytest -q`. See [the refactor explanation and
+verification](docs/solid-refactor.md). Tenant-owned requests and the remaining
+owner features are separate work.
 
 ## Maintenance request workflow
 
@@ -229,3 +265,5 @@ GoldLion72 reviewed the priority-change implementation in [PR #9](https://github
 
 
 - Oct 25 partner-review follow-up: GoldLion72 suggested preserving signup passwords after validation errors and prefilling the login email after account creation. Codex implemented both using form callbacks, added retry/navigation/prefill regression checks, and ran all 173 tests successfully. Jai authorized merging the corrected PR after verification; the partner review remains COMMENTED, with no formal approval claimed.
+
+- Oct 30–31: Refactored authentication around service-owned account/password interfaces for Lecture 5 Dependency Inversion. Added independent in-memory tests, retained the 173-case baseline, and verified 184 passing tests plus the unchanged browser workflows. The SOLID PR is awaiting partner review.

@@ -1,6 +1,7 @@
 """Exercise the real login/signup/router UI with isolated stores and demo fixtures."""
 
 from pathlib import Path
+import os
 
 import pytest
 from streamlit.testing.v1 import AppTest
@@ -259,18 +260,22 @@ def test_accounts_persist_and_a_fresh_browser_session_requires_login(auth_app):
 
 
 
-def test_misconfigured_maintenance_path_cannot_write_into_an_auth_store(auth_app, monkeypatch):
+@pytest.mark.parametrize("store_name", ["tenant_accounts.db", "owner_accounts.db"])
+def test_misconfigured_maintenance_path_cannot_write_into_an_auth_store(auth_app, monkeypatch, store_name):
     from contextlib import closing
     import sqlite3
 
     screen, tenants, _, _ = auth_app
-    monkeypatch.setenv("PROPERTYCARE_DB_PATH", str(tenants.database_path))
+    account_path = tenants.database_path.with_name(store_name)
+    # Windows paths remain the same file even when the configuration changes case.
+    configured_path = str(account_path).swapcase() if os.name == "nt" else str(account_path)
+    monkeypatch.setenv("PROPERTYCARE_DB_PATH", configured_path)
     login_owner(screen)
     button(screen, "Open maintenance requests").click().run()
     assert not screen.exception
     assert "databases must be separate" in screen.error[0].value
     assert not screen.table
-    with closing(sqlite3.connect(tenants.database_path)) as connection:
+    with closing(sqlite3.connect(account_path)) as connection:
         assert connection.execute(
             "SELECT name FROM sqlite_master WHERE name = 'maintenance_requests'"
         ).fetchall() == []

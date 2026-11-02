@@ -8,6 +8,7 @@ import streamlit as st
 from src.data.account_repositories import OwnerAccountRepository, TenantAccountRepository
 from src.domain.accounts import AccountRole, PASSWORD_POLICY, TERMS_VERSION
 from src.services.authentication_service import AuthenticationService
+from src.services.passwords import Passwords
 
 PASSWORD_KEYS = ("tenant_password", "owner_password", "signup_password", "signup_confirmation")
 TERMS_TEXT = f"""### Terms and Conditions — academic demonstration
@@ -32,6 +33,7 @@ def authentication_service(directory):
     return AuthenticationService(
         TenantAccountRepository(path / "tenant_accounts.db"),
         OwnerAccountRepository(path / "owner_accounts.db"),
+        passwords=Passwords(),
     )
 
 

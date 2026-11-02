@@ -3,25 +3,27 @@
 import secrets
 from threading import Lock
 
-from src.data.account_repositories import OwnerAccountRepository, TenantAccountRepository
 from src.domain.accounts import (
     AccessDeniedError, AccountRole, Principal, TenantAccount, TenantProfile,
     TERMS_VERSION, normalize_email, utc_now, validate_signup_password, validate_terms,
 )
-from src.services.passwords import Passwords
+from src.services.authentication_ports import OwnerAccountStore, PasswordCodec, TenantAccountStore
 
 INVALID_CREDENTIALS = "Invalid email address or password."
 
 
 class AuthenticationService:
-    def __init__(self, tenants, owners, passwords=None):
-        if not isinstance(tenants, TenantAccountRepository) or not isinstance(owners, OwnerAccountRepository):
+    def __init__(self, tenants: TenantAccountStore, owners: OwnerAccountStore, *, passwords: PasswordCodec):
+        if (not isinstance(tenants, TenantAccountStore) or tenants.role is not AccountRole.TENANT
+                or not isinstance(owners, OwnerAccountStore) or owners.role is not AccountRole.OWNER):
             raise ValueError("Tenant and owner repositories must have the correct identity.")
-        if tenants.database_path == owners.database_path:
+        if tenants.identity == owners.identity:
             raise ValueError("Tenant and owner databases must be separate.")
+        if not isinstance(passwords, PasswordCodec):
+            raise ValueError("A password codec with hash and verify operations is required.")
         self.tenants = tenants
         self.owners = owners
-        self.passwords = passwords or Passwords()
+        self.passwords = passwords
         self._dummy_hash = self.passwords.hash(secrets.token_urlsafe(32))
         self._sessions = {}
         self._lock = Lock()
