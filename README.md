@@ -1,5 +1,14 @@
 # PropertyCare
 
+## Tested screenshots
+
+Captured from the running local application on November 7, 2026 using fictional seeded demo accounts. A fictional tenant maintenance request was submitted and saved successfully. The 227 existing tests passed across the initial run and the two isolated-runtime import-path reruns.
+
+![Login screen](docs/screenshots/login.png)
+
+![Fictional tenant request saved](docs/screenshots/tenant-request.png)
+
+
 [![CI](https://github.com/JaiKaushik03/cen5064-project-Jai/actions/workflows/ci.yml/badge.svg?branch=main&event=push)](https://github.com/JaiKaushik03/cen5064-project-Jai/actions/workflows/ci.yml)
 
 **Student:** Jai LNU · **Course:** CEN 5064 Software Design, Fall 2026 · **Partner:** GoldLion72
