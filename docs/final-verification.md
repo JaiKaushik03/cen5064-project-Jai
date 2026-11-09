@@ -22,6 +22,16 @@ Service/Domain tests verify Critical-first rejection and unchanged stored bytes,
 
 A live Chrome attempt to open the isolated localhost app was denied by the browser security gate before page access. No alternate browser, raw protocol or indirect network workaround was attempted. Successful startup and automated Streamlit screen tests are verified; a manual live-browser walkthrough of this final branch is not claimed. The partner can perform that walkthrough from the README.
 
-## Remaining release checks
+## Clean clone and CI receipts
 
-Clean-clone and final-head CI receipts will be added after their actual completion. Peer review and explicit merge authorization are still required. The original planned application features are implemented on the branch; these release checks do not claim a merged or production-ready system.
+A fresh GitHub clone of the feature branch at `29acc24` used a newly created Python 3.13 virtual environment, installed requirements.txt, ran the explicit README demo setup (3 tenant accounts and 1 owner), installed requirements-dev.txt and ran the complete suite: **267 passed, 0 failed in 38.06 seconds**. No pre-existing accounts, request database or virtual environment was copied into it. Dependency checks passed and the clean clone has no tracked modifications. The final receipt commit changes documentation only; application/test code is identical to this verified clone.
+
+[Implementation CI run 42615932831](https://github.com/JaiKaushik03/cen5064-project-Jai/actions/runs/42615932831) is green for `29acc24`; its test job reports **267 passed in 39.99 seconds**. The final documentation commit also triggers CI; the exact latest result is recorded in PR #19 and its Checks tab.
+
+## Review handoff and limits
+
+The original planned application features are implemented on this branch. No unresolved implementation failure was found by the checks above. This does not guarantee a grade or replace partner review.
+
+Browser access was also denied for GitHub's project-board page, so no board edit was performed through a workaround. Repository issues #1/#10/#18 and the historical review responses are updated through the authorized GitHub connector, and PR #19 links their closure to a later merge. Existing screenshots remain historical; no new manual browser screenshots are fabricated.
+
+Peer review and explicit final merge approval remain required. PR #19 stays open and unmerged. No reviewer is requested automatically, no approval is submitted and no branch is deleted.
