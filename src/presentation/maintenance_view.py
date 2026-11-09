@@ -13,11 +13,15 @@ def submit_request(service):
     st.session_state.pop("submission_success", None)
     st.session_state.pop("submission_error", None)
     try:
+        optional = {}
+        photo = st.session_state.get(f"request_photo_{st.session_state.get('photo_version', 0)}")
+        if photo is not None:
+            optional["photo"] = photo.getvalue()
+        if st.session_state.get("request_unit_id") is not None:
+            optional["registered_unit_id"] = st.session_state["request_unit_id"]
         saved = service.submit(
-            st.session_state["property_unit"],
-            st.session_state["title"],
-            st.session_state["description"],
-            st.session_state["priority"],
+            st.session_state["property_unit"], st.session_state["title"],
+            st.session_state["description"], st.session_state["priority"], **optional,
         )
     except ValueError as error:
         st.session_state["submission_error"] = str(error)
@@ -27,6 +31,8 @@ def submit_request(service):
         st.session_state["title"] = ""
         st.session_state["description"] = ""
         st.session_state["priority"] = DEFAULT_PRIORITY.value
+        st.session_state["request_unit_id"] = None
+        st.session_state["photo_version"] = st.session_state.get("photo_version", 0) + 1
         st.session_state["submission_success"] = f"Request #{saved.id} saved successfully."
 
 
@@ -57,7 +63,13 @@ def render_maintenance(service, *, tenant=False):
 
     st.subheader("Submit a maintenance request")
     st.caption("Fields marked * are required. Description is optional.")
+    units = service.list_units()
+    units_by_id = {unit["id"]: unit for unit in units}
     with st.form("maintenance_request"):
+        if units:
+            st.selectbox("Registered unit (optional)", [None, *units_by_id],
+                         format_func=lambda value: "Unregistered / legacy location" if value is None else
+                         f"{units_by_id[value]['name']} / Unit {units_by_id[value]['number']}", key="request_unit_id")
         st.text_input(
             "Property / Unit *", placeholder="Oak Court / Unit 2B", key="property_unit"
         )
@@ -69,6 +81,8 @@ def render_maintenance(service, *, tenant=False):
             priority_options,
             key="priority",
         )
+        st.file_uploader("Issue photo (optional, PNG/JPEG, up to 2 MiB)", type=["png", "jpg", "jpeg"],
+                         key=f"request_photo_{st.session_state.get('photo_version', 0)}")
         st.form_submit_button("Submit request", on_click=submit_request, args=(service,))
 
     if st.session_state.get("submission_error"):
@@ -93,11 +107,16 @@ def render_maintenance(service, *, tenant=False):
                     "Priority": request.priority.value,
                     "Status": request.status.value,
                     "Submitted (UTC)": request.created_at,
+                    "Fixed (UTC)": request.completed_at or "",
                 }
                 for request in requests
             ]
         )
 
+    for request in requests:
+        if request.photo:
+            with st.expander(f"Photo for request #{request.id}"):
+                st.image(request.photo, caption=request.title)
     if tenant:
         return
 
