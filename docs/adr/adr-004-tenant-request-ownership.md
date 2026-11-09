@@ -41,3 +41,8 @@ Legacy rows stay owner-only until a separately designed, verified assignment
 workflow exists. No completion, assignment, contact snapshot or profile-editing UI
 is added. Parts 2/3 must retain original issue details and define the requested
 historical contact information before allowing profile changes.
+
+
+## Final workflow follow-up
+
+The final feature branch adds separate contractor credentials, retained contact snapshots, assignment/progress/cost history and confirmed completion. Earlier scope limits above are historical. Existing tenant ownership, account keys, role separation and Completed priority validation remain. See [ADR 005](adr-005-retained-maintenance-lifecycle.md) and the final verification record.

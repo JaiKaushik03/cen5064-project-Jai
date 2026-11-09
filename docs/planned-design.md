@@ -1,3 +1,5 @@
+> Historical milestone record. The current implementation and scope are documented in [final design](final-design.md) and [final verification](final-verification.md). Dated claims below describe their original milestone.
+
 # PropertyCare planned full-semester design
 
 Preserved from the original README. These diagrams and features describe future scope, not the implemented midterm slice. See the root README for the actual application.

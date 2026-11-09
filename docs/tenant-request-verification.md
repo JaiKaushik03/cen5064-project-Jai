@@ -1,3 +1,5 @@
+> Historical milestone record. The current implementation and scope are documented in [final design](final-design.md) and [final verification](final-verification.md). Dated claims below describe their original milestone.
+
 # Part 1: tenant requests and private history verification
 
 ## Initial review scope

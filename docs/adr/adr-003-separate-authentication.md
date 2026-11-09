@@ -48,3 +48,8 @@ Tenant access to the old shared workspace is deliberately suspended, preserving
 data without falsely claiming tenant-specific visibility. Ownership, Active/Fixed
 Issues, completion confirmation, assignment, costs, and images remain future work.
 Earlier ADRs remain historical records.
+
+
+## Final workflow follow-up
+
+The final feature branch adds separate contractor credentials, retained contact snapshots, assignment/progress/cost history and confirmed completion. Earlier scope limits above are historical. Existing tenant ownership, account keys, role separation and Completed priority validation remain. See [ADR 005](adr-005-retained-maintenance-lifecycle.md) and the final verification record.
