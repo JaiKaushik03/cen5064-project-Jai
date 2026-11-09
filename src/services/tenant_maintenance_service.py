@@ -1,6 +1,6 @@
 """Tenant request use cases; ownership always comes from the current login session."""
 
-from src.domain.maintenance_request import MaintenanceRequest
+from src.domain.request_builder import MaintenanceRequestBuilder
 
 
 class TenantMaintenanceService:
@@ -12,10 +12,13 @@ class TenantMaintenanceService:
     def _tenant(self):
         return self.authentication.get_tenant_account(self.current_token())
 
-    def submit(self, property_unit, title, description, priority):
+    def submit(self, property_unit, title, description, priority, *, photo=None, registered_unit_id=None):
         tenant = self._tenant()
-        request = MaintenanceRequest(property_unit, title, description, priority,
-                                     tenant_key=tenant.account_key)
+        if registered_unit_id is not None:
+            if self.repository.get_unit(registered_unit_id) is None:
+                raise ValueError("Registered unit was not found.")
+        request = (MaintenanceRequestBuilder(property_unit, title, description, priority)
+                   .reported_by(tenant).with_photo(photo).at_registered_unit(registered_unit_id).build())
         return self.repository.save(request)
 
     def list_requests(self):
@@ -29,3 +32,7 @@ class TenantMaintenanceService:
             # Another tenant's ID and a missing ID must be indistinguishable.
             raise ValueError("Maintenance request was not found.")
         return request
+
+    def list_units(self):
+        self._tenant()
+        return self.repository.list_units()

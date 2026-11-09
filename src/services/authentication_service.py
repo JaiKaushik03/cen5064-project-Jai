@@ -7,13 +7,13 @@ from src.domain.accounts import (
     AccessDeniedError, AccountRole, Principal, TenantAccount, TenantProfile,
     TERMS_VERSION, normalize_email, utc_now, validate_signup_password, validate_terms,
 )
-from src.services.authentication_ports import OwnerAccountStore, PasswordCodec, TenantAccountStore
+from src.services.authentication_ports import OwnerAccountStore, PasswordCodec, TenantAccountStore, ContractorAccountStore
 
 INVALID_CREDENTIALS = "Invalid email address or password."
 
 
 class AuthenticationService:
-    def __init__(self, tenants: TenantAccountStore, owners: OwnerAccountStore, *, passwords: PasswordCodec):
+    def __init__(self, tenants: TenantAccountStore, owners: OwnerAccountStore, *, passwords: PasswordCodec, contractors=None):
         if (not isinstance(tenants, TenantAccountStore) or tenants.role is not AccountRole.TENANT
                 or not isinstance(owners, OwnerAccountStore) or owners.role is not AccountRole.OWNER):
             raise ValueError("Tenant and owner repositories must have the correct identity.")
@@ -21,6 +21,11 @@ class AuthenticationService:
             raise ValueError("Tenant and owner databases must be separate.")
         if not isinstance(passwords, PasswordCodec):
             raise ValueError("A password codec with hash and verify operations is required.")
+        if contractors is not None:
+            if (not isinstance(contractors, ContractorAccountStore) or contractors.role is not AccountRole.CONTRACTOR
+                    or contractors.identity in {tenants.identity, owners.identity}):
+                raise ValueError("Contractor accounts must use a separate correctly identified store.")
+        self.contractors = contractors
         self.tenants = tenants
         self.owners = owners
         self.passwords = passwords
@@ -42,6 +47,11 @@ class AuthenticationService:
     def login_owner(self, email, password):
         return self._login(self.owners, AccountRole.OWNER, email, password)
 
+    def login_contractor(self, email, password):
+        if self.contractors is None:
+            raise ValueError(INVALID_CREDENTIALS)
+        return self._login(self.contractors, AccountRole.CONTRACTOR, email, password)
+
     def _login(self, repository, role, email, password):
         try:
             email = normalize_email(email)
@@ -55,9 +65,9 @@ class AuthenticationService:
         encoded = account.password_hash if account else self._dummy_hash
         if not self.passwords.verify(encoded, password) or account is None:
             raise ValueError(INVALID_CREDENTIALS)
-        name = account.profile.full_name if role is AccountRole.TENANT else "Owner"
+        name = account.profile.full_name if role is AccountRole.TENANT else (account.full_name if role is AccountRole.CONTRACTOR else "Owner")
         principal = Principal(account.id, role, email, name, repository.identity,
-                              account.account_key if role is AccountRole.TENANT else None)
+                              account.account_key if role in (AccountRole.TENANT, AccountRole.CONTRACTOR) else None)
         token = secrets.token_urlsafe(32)
         with self._lock:
             self._sessions[token] = principal
@@ -70,13 +80,17 @@ class AuthenticationService:
             principal = self._sessions.get(token)
         if principal is None:
             return None
-        repository = self.tenants if principal.role is AccountRole.TENANT else self.owners
+        repository = {AccountRole.TENANT: self.tenants, AccountRole.OWNER: self.owners,
+                      AccountRole.CONTRACTOR: self.contractors}.get(principal.role)
+        if repository is None:
+            self.logout(token)
+            return None
         try:
             account = repository.get_by_id(principal.account_id)
         except ValueError:
             account = None
         email = (account.profile.email if principal.role is AccountRole.TENANT else account.email) if account else None
-        account_changed = (principal.role is AccountRole.TENANT and account is not None
+        account_changed = (principal.role in (AccountRole.TENANT, AccountRole.CONTRACTOR) and account is not None
                            and account.account_key != principal.account_key)
         if repository.identity != principal.database_identity or email != principal.email or account_changed:
             self.logout(token)

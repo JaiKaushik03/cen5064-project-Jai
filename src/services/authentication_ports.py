@@ -2,7 +2,7 @@
 
 from typing import Protocol, runtime_checkable
 
-from src.domain.accounts import AccountRole, OwnerAccount, TenantAccount
+from src.domain.accounts import AccountRole, OwnerAccount, TenantAccount, ContractorAccount
 
 
 @runtime_checkable
@@ -35,3 +35,11 @@ class PasswordCodec(Protocol):
     def hash(self, password: str) -> str: ...
 
     def verify(self, password_hash: str, password: str) -> bool: ...
+
+
+@runtime_checkable
+class ContractorAccountStore(AccountStoreIdentity, Protocol):
+    def get_by_email(self, email: str) -> ContractorAccount | None: ...
+    def get_by_id(self, account_id: int) -> ContractorAccount | None: ...
+    def save(self, account: ContractorAccount) -> ContractorAccount: ...
+    def list_all(self) -> list[ContractorAccount]: ...
