@@ -12,9 +12,9 @@ class OwnerMaintenanceService:
     def _authorize(self):
         self.authentication.require_session(self.current_token(), AccountRole.OWNER)
 
-    def submit(self, *args):
+    def submit(self, *args, **kwargs):
         self._authorize()
-        return self.maintenance.submit(*args)
+        return self.maintenance.submit(*args, **kwargs)
 
     def list_requests(self):
         self._authorize()
@@ -23,3 +23,7 @@ class OwnerMaintenanceService:
     def change_priority(self, *args):
         self._authorize()
         return self.maintenance.change_priority(*args)
+
+    def list_units(self):
+        self._authorize()
+        return self.maintenance.list_units()

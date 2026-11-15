@@ -18,6 +18,7 @@ def utc_now() -> str:
 class AccountRole(Enum):
     TENANT = "tenant"
     OWNER = "owner"
+    CONTRACTOR = "contractor"
 
 
 class DuplicateEmailError(ValueError):
@@ -146,3 +147,18 @@ class Principal:
     display_name: str
     database_identity: str
     account_key: str | None = None
+
+
+@dataclass(frozen=True)
+class ContractorAccount:
+    full_name: str
+    email: str
+    password_hash: str = field(repr=False)
+    id: int | None = None
+    account_key: str = field(default_factory=lambda: str(uuid4()))
+
+    def __post_init__(self):
+        object.__setattr__(self, "full_name", required_text(self.full_name, "Contractor name", 100))
+        object.__setattr__(self, "email", normalize_email(self.email))
+        object.__setattr__(self, "account_key", normalize_account_key(self.account_key))
+        validate_hash(self.password_hash)

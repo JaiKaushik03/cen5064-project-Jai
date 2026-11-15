@@ -6,11 +6,12 @@ from pathlib import Path
 import streamlit as st
 
 from src.data.account_repositories import OwnerAccountRepository, TenantAccountRepository
+from src.data.contractor_repository import ContractorAccountRepository
 from src.domain.accounts import AccountRole, PASSWORD_POLICY, TERMS_VERSION
 from src.services.authentication_service import AuthenticationService
 from src.services.passwords import Passwords
 
-PASSWORD_KEYS = ("tenant_password", "owner_password", "signup_password", "signup_confirmation")
+PASSWORD_KEYS = ("tenant_password", "owner_password", "contractor_password", "signup_password", "signup_confirmation", "new_contractor_password")
 TERMS_TEXT = f"""### Terms and Conditions — academic demonstration
 Version: **{TERMS_VERSION}**
 
@@ -34,6 +35,7 @@ def authentication_service(directory):
         TenantAccountRepository(path / "tenant_accounts.db"),
         OwnerAccountRepository(path / "owner_accounts.db"),
         passwords=Passwords(),
+        contractors=ContractorAccountRepository(path / "contractor_accounts.db"),
     )
 
 
@@ -68,7 +70,8 @@ def login(authentication, role):
     st.session_state.pop("auth_success", None)
     prefix = role.value
     try:
-        method = authentication.login_tenant if role is AccountRole.TENANT else authentication.login_owner
+        method = {AccountRole.TENANT: authentication.login_tenant, AccountRole.OWNER: authentication.login_owner,
+                  AccountRole.CONTRACTOR: authentication.login_contractor}[role]
         token = method(st.session_state.get(f"{prefix}_email", ""),
                        st.session_state.get(f"{prefix}_password", ""))
     except ValueError as error:
@@ -120,19 +123,21 @@ def feedback():
 
 def render_login(authentication, role):
     owner = role is AccountRole.OWNER
-    st.title("PropertyCare — Owner Login" if owner else "PropertyCare")
-    st.caption("Owner access" if owner else "Rental Maintenance Management System")
+    contractor = role is AccountRole.CONTRACTOR
+    st.title("PropertyCare — Contractor Login" if contractor else ("PropertyCare — Owner Login" if owner else "PropertyCare"))
+    st.caption("Contractor access" if contractor else ("Owner access" if owner else "Rental Maintenance Management System"))
     feedback()
     with st.form(f"{role.value}_login"):
         st.text_input("Email address", key=f"{role.value}_email", max_chars=254)
         st.text_input("Password", type="password", key=f"{role.value}_password", max_chars=128)
-        st.form_submit_button("Login as Owner" if owner else "Log In",
+        st.form_submit_button("Login as Contractor" if contractor else ("Login as Owner" if owner else "Log In"),
                               on_click=login, args=(authentication, role))
-    if owner:
+    if owner or contractor:
         st.button("Back to User Login", on_click=navigate, args=("tenant_login",))
     else:
         st.button("Sign Up", on_click=navigate, args=("signup",))
         st.button("Login as Owner", on_click=navigate, args=("owner_login",))
+        st.button("Login as Contractor", on_click=navigate, args=("contractor_login",))
 
 
 def render_signup(authentication):

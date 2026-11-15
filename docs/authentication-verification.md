@@ -1,3 +1,5 @@
+> Historical milestone record. The current implementation and scope are documented in [final design](final-design.md) and [final verification](final-verification.md). Dated claims below describe their original milestone.
+
 # October 24 authentication/signup verification
 
 These are Codex-executed technical checks for Jai's requirements, not a claim

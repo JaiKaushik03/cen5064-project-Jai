@@ -22,8 +22,9 @@ class _AccountRepository:
             tables = {row[0] for row in connection.execute(
                 "SELECT name FROM sqlite_master WHERE type = 'table'"
             )}
-            if self.forbidden_table in tables or "maintenance_requests" in tables:
-                raise ValueError("Tenant, owner, and maintenance databases must be separate.")
+            if (({"tenant_accounts", "owner_accounts", "contractor_accounts"} - {self.table_name}) & tables
+                    or "maintenance_requests" in tables):
+                raise ValueError("Tenant, owner, contractor, and maintenance databases must be separate.")
             connection.execute(self.schema)
             self._migrate(connection)
 

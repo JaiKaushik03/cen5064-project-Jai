@@ -170,3 +170,53 @@ assert AuthenticationService is not None
     result = subprocess.run([sys.executable, "-B", "-c", program],
                             cwd=Path(__file__).resolve().parents[1], capture_output=True, text=True)
     assert result.returncode == 0, result.stderr
+
+
+
+def contractor_operation(workflow, operation):
+    if operation == "list":
+        return workflow.list_contractors()
+    if operation == "register":
+        return workflow.register_contractor("Fictional Repairer", "repair@example.com", "RepairSecret2026!")
+    return workflow.assign(1, 1, "25.00")
+
+
+@pytest.mark.parametrize("operation", ["list", "register", "assign"])
+def test_owner_contractor_operations_without_store_fail_cleanly(memory_authentication, monkeypatch, operation):
+    from src.services.workflow_service import OwnerWorkflowService
+
+    authentication = memory_authentication
+    authentication.owners.save(OwnerAccount("owner@example.com", authentication.passwords.hash("OwnerSecret2026!")))
+    token = authentication.login_owner("owner@example.com", "OwnerSecret2026!")
+    assert authentication.contractors is None
+    workflow = OwnerWorkflowService(authentication, lambda: token, SimpleNamespace())
+
+    def unexpected_hash(password):
+        pytest.fail("Missing contractor storage must be rejected before password hashing or persistence.")
+
+    monkeypatch.setattr(authentication.passwords, "hash", unexpected_hash)
+    with pytest.raises(ValueError, match="Contractor account storage is not configured"):
+        contractor_operation(workflow, operation)
+    assert len(authentication.owners.accounts) == 1
+    assert authentication.tenants.accounts == {}
+
+
+@pytest.mark.parametrize("operation", ["list", "register", "assign"])
+@pytest.mark.parametrize("identity", ["tenant", "logged-out"])
+def test_missing_contractor_store_does_not_bypass_owner_authorization(memory_authentication, operation, identity):
+    from src.services.workflow_service import OwnerWorkflowService
+
+    authentication = memory_authentication
+    signup(authentication)
+    token = authentication.login_tenant("tenant@example.com", "StrongTenant2026!")
+    if identity == "logged-out":
+        authentication.logout(token)
+    workflow = OwnerWorkflowService(authentication, lambda: token, SimpleNamespace())
+    with pytest.raises(AccessDeniedError, match="Owner login is required"):
+        contractor_operation(workflow, operation)
+
+
+def test_contractor_login_without_store_keeps_normal_validation_error(memory_authentication):
+    with pytest.raises(ValueError, match=INVALID_CREDENTIALS):
+        memory_authentication.login_contractor("repair@example.com", "RepairSecret2026!")
+    assert memory_authentication._sessions == {}

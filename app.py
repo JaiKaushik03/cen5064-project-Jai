@@ -14,22 +14,24 @@ from src.presentation.maintenance_view import render_maintenance
 from src.services.maintenance_request_service import MaintenanceRequestService
 from src.services.owner_maintenance_service import OwnerMaintenanceService
 from src.services.tenant_maintenance_service import TenantMaintenanceService
+from src.services.workflow_service import OwnerWorkflowService, ContractorWorkflowService
+from src.presentation.owner_views import render_issues, render_catalog, render_assignments
 
 
 def request_repository(authentication):
     path = Path(os.environ.get("PROPERTYCARE_DB_PATH", str(Path(__file__).resolve().parent / "data/propertycare.db")))
-    if path.resolve() in {Path(authentication.tenants.identity), Path(authentication.owners.identity)}:
+    if path.resolve() in {Path(authentication.tenants.identity), Path(authentication.owners.identity), Path(authentication.contractors.identity)}:
         raise ValueError("Authentication and maintenance databases must be separate.")
     return MaintenanceRequestRepository(path)
 
 
 def main():
-    st.set_page_config(page_title="PropertyCare", page_icon="🏠", layout="centered")
+    st.set_page_config(page_title="PropertyCare", page_icon="🏠", layout="wide")
     authentication = configured_authentication()
     token = st.session_state.get("auth_token")
     principal = authentication.resolve_session(token)
     page = st.session_state.get("auth_page", "tenant_login")
-    protected = {"tenant_dashboard", "tenant_maintenance", "owner_dashboard", "owner_maintenance"}
+    protected = {"tenant_dashboard", "tenant_maintenance", "owner_dashboard", "owner_maintenance", "contractor_dashboard"}
 
     # URLs/query parameters never grant a role. Resolve opaque server-issued sessions.
     if principal is None:
@@ -41,6 +43,8 @@ def main():
             st.session_state["auth_page"] = page
         if page == "signup":
             render_signup(authentication)
+        elif page == "contractor_login":
+            render_login(authentication, AccountRole.CONTRACTOR)
         elif page == "owner_login":
             render_login(authentication, AccountRole.OWNER)
         else:
@@ -85,6 +89,20 @@ def main():
         st.button("Logout", on_click=logout, args=(authentication,))
         return
 
+    if principal.role is AccountRole.CONTRACTOR:
+        authentication.require_session(token, AccountRole.CONTRACTOR)
+        st.title("Contractor Dashboard")
+        st.text(f"Welcome, {principal.display_name}.")
+        try:
+            render_issues(ContractorWorkflowService(authentication, lambda: st.session_state.get("auth_token"), request_repository(authentication)), contractor=True)
+        except AccessDeniedError:
+            logout(authentication)
+            st.rerun()
+        except ValueError as error:
+            st.error(str(error))
+        st.button("Logout", on_click=logout, args=(authentication,))
+        return
+
     authentication.require_session(token, AccountRole.OWNER)
     if page == "owner_maintenance":
         try:
@@ -110,7 +128,18 @@ def main():
         if st.session_state.get("auth_error"):
             st.error(st.session_state["auth_error"])
         st.button("Open maintenance requests", on_click=navigate, args=("owner_maintenance",))
-        st.caption("Active Issues and Fixed Issues management will be added separately.")
+        try:
+            workflow = OwnerWorkflowService(authentication, lambda: st.session_state.get("auth_token"), request_repository(authentication))
+            render_issues(workflow)
+            with st.expander("Manage properties and units"):
+                render_catalog(workflow)
+            with st.expander("Manage contractors and assignments"):
+                render_assignments(workflow)
+        except AccessDeniedError:
+            logout(authentication)
+            st.rerun()
+        except ValueError as error:
+            st.error(str(error))
     st.button("Logout", on_click=logout, args=(authentication,))
 
 

@@ -68,7 +68,7 @@ def test_initial_login_is_empty_and_does_not_expose_maintenance(auth_app):
     assert screen.caption[0].value == "Rental Maintenance Management System"
     assert screen.text_input(key="tenant_email").value == ""
     assert screen.text_input(key="tenant_password").value == ""
-    assert {item.label for item in screen.button} == {"Log In", "Sign Up", "Login as Owner"}
+    assert {item.label for item in screen.button} == {"Log In", "Sign Up", "Login as Owner", "Login as Contractor"}
     assert not screen.table
 
 
