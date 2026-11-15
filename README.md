@@ -6,14 +6,14 @@ CEN 5064 Software Design · Jai LNU · Partner: GoldLion72
 
 PropertyCare is a local rental-maintenance application built with Streamlit and SQLite. Tenants submit private requests; owners register properties and units, review tenant contact details, prioritize repairs and assign contractors; contractors see their own assignments and record progress and completion. Requests retain photos, cost records and history after completion.
 
-This README describes the final implementation. For submission verification before the final merge, clone the feature branch:
+This README describes the final implementation. Clone the repository:
 
 ```bash
-git clone --branch codex/final-maintenance-workflow https://github.com/JaiKaushik03/cen5064-project-Jai.git
+git clone https://github.com/JaiKaushik03/cen5064-project-Jai.git
 cd cen5064-project-Jai
 ```
 
-After merge, a normal clone of the repository gets the same implementation from main. Review and merge status are recorded on the PR, not inferred from this badge.
+The default branch is `main`. [PR #19](https://github.com/JaiKaushik03/cen5064-project-Jai/pull/19) records the final implementation, partner corrections, merge receipt and CI results.
 
 ## Run on Windows
 
@@ -123,6 +123,6 @@ Prepare two tenant requests: one Critical and one Low. In two minutes: show tena
 
 ## Tracking and review
 
-[Project board](https://github.com/users/JaiKaushik03/projects/1), [owner portal #1](https://github.com/JaiKaushik03/cen5064-project-Jai/issues/1), [completion #10](https://github.com/JaiKaushik03/cen5064-project-Jai/issues/10), [final workflow/patterns #18](https://github.com/JaiKaushik03/cen5064-project-Jai/issues/18). Implementation and verified corrections are committed in logical steps. GoldLion72 reviewed PR #19 at `b728008` with COMMENTED status. The requested contractor-store typing, error handling and regression tests are implemented, including the same guard for assignment. [PR #19](https://github.com/JaiKaushik03/cen5064-project-Jai/pull/19) records the latest CI and correction results and remains open for final merge approval.
+[Project board](https://github.com/users/JaiKaushik03/projects/1), [owner portal #1](https://github.com/JaiKaushik03/cen5064-project-Jai/issues/1), [completion #10](https://github.com/JaiKaushik03/cen5064-project-Jai/issues/10), [final workflow/patterns #18](https://github.com/JaiKaushik03/cen5064-project-Jai/issues/18). Implementation and verified corrections are committed in logical steps. GoldLion72 reviewed PR #19 at `b728008` with COMMENTED status. The requested contractor-store typing, error handling and regression tests are implemented, including the same guard for assignment. [PR #19](https://github.com/JaiKaushik03/cen5064-project-Jai/pull/19) records the latest CI, correction results and final merge status. Jai authorized the final merge after correction verification on November 15, 2026.
 
 Jai supplied the project direction, requirements, professor feedback and acceptance criteria, and selected the full final scope. Codex provided substantial implementation and verification assistance. Recorded partner feedback is credited in the relevant PRs. The final PR includes the required AI critique with actual findings and corrections.
