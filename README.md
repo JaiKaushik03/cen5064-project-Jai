@@ -6,7 +6,7 @@ CEN 5064 Software Design · Jai LNU · Partner: GoldLion72
 
 PropertyCare is a local rental-maintenance application built with Streamlit and SQLite. Tenants submit private requests; owners register properties and units, review tenant contact details, prioritize repairs and assign contractors; contractors see their own assignments and record progress and completion. Requests retain photos, cost records and history after completion.
 
-This README describes the final implementation. For the pending review, clone the feature branch:
+This README describes the final implementation. For submission verification before the final merge, clone the feature branch:
 
 ```bash
 git clone --branch codex/final-maintenance-workflow https://github.com/JaiKaushik03/cen5064-project-Jai.git
@@ -100,7 +100,9 @@ Windows:
 .venv\Scripts\python.exe -m pip check
 ```
 
-On Linux/macOS substitute `.venv/bin/python`. The full suite contains **267 cases**, including the 227-case baseline and 40 final workflow checks. It covers Domain decisions, Builder products, exact costs, actual image validation, safe legacy migrations, rollback, privacy, role boundaries, account replacement, confirmation/cancellation, Streamlit form behavior and persistence. Verification results are in [final verification](docs/final-verification.md).
+On Linux/macOS substitute `.venv/bin/python`. The full suite contains **277 cases**: the 227-case baseline, 40 final workflow checks and 10 contractor-store review regressions. It covers Domain decisions, Builder products, exact costs, actual image validation, safe legacy migrations, rollback, privacy, role boundaries, account replacement, confirmation/cancellation, Streamlit form behavior and persistence. Verification results are in [final verification](docs/final-verification.md).
+
+Contractor storage is optional when constructing the authentication service for tenant/owner-only use. Owner contractor registration, listing and assignment require a configured contractor store and raise a clear `ValueError` when it is absent. Owner authorization is checked first; normal app startup supplies the store automatically.
 
 ## Architecture and design
 
@@ -121,6 +123,6 @@ Prepare two tenant requests: one Critical and one Low. In two minutes: show tena
 
 ## Tracking and review
 
-[Project board](https://github.com/users/JaiKaushik03/projects/1), [owner portal #1](https://github.com/JaiKaushik03/cen5064-project-Jai/issues/1), [completion #10](https://github.com/JaiKaushik03/cen5064-project-Jai/issues/10), [final workflow/patterns #18](https://github.com/JaiKaushik03/cen5064-project-Jai/issues/18). Implementation and verified corrections are committed in logical steps. Peer review and green CI precede merging; the final review PR is left open.
+[Project board](https://github.com/users/JaiKaushik03/projects/1), [owner portal #1](https://github.com/JaiKaushik03/cen5064-project-Jai/issues/1), [completion #10](https://github.com/JaiKaushik03/cen5064-project-Jai/issues/10), [final workflow/patterns #18](https://github.com/JaiKaushik03/cen5064-project-Jai/issues/18). Implementation and verified corrections are committed in logical steps. GoldLion72 reviewed PR #19 at `b728008` with COMMENTED status. The requested contractor-store typing, error handling and regression tests are implemented, including the same guard for assignment. [PR #19](https://github.com/JaiKaushik03/cen5064-project-Jai/pull/19) records the latest CI and correction results and remains open for final merge approval.
 
 Jai supplied the project direction, requirements, professor feedback and acceptance criteria, and selected the full final scope. Codex provided substantial implementation and verification assistance. Recorded partner feedback is credited in the relevant PRs. The final PR includes the required AI critique with actual findings and corrections.

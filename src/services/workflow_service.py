@@ -3,6 +3,7 @@ from src.domain.accounts import AccountRole, AccessDeniedError, ContractorAccoun
 from src.domain.properties import Property, Unit
 from src.domain.request_status import RequestStatus
 from src.domain.work_orders import cost_in_cents
+from src.services.authentication_ports import ContractorAccountStore
 
 class OwnerWorkflowService:
     def __init__(self, authentication, current_token, repository):
@@ -31,18 +32,25 @@ class OwnerWorkflowService:
         self._authorize()
         return self.repository.register_unit(Unit(property_id, number))
 
+    def _contractor_store(self) -> ContractorAccountStore:
+        store = self.authentication.contractors
+        if store is None:
+            raise ValueError("Contractor account storage is not configured.")
+        return store
+
     def list_contractors(self):
         self._authorize()
-        return self.authentication.contractors.list_all()
+        return self._contractor_store().list_all()
 
     def register_contractor(self, name, email, password):
         self._authorize()
+        store = self._contractor_store()
         validate_signup_password(password, password)
-        return self.authentication.contractors.save(ContractorAccount(name, email, self.authentication.passwords.hash(password)))
+        return store.save(ContractorAccount(name, email, self.authentication.passwords.hash(password)))
 
     def assign(self, request_id, contractor_id, estimated_cost, scheduled_for=None):
         self._authorize()
-        contractor = self.authentication.contractors.get_by_id(contractor_id)
+        contractor = self._contractor_store().get_by_id(contractor_id)
         if contractor is None:
             raise ValueError('Contractor was not found.')
         cents = cost_in_cents(estimated_cost)

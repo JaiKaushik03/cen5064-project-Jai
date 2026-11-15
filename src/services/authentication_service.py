@@ -13,7 +13,7 @@ INVALID_CREDENTIALS = "Invalid email address or password."
 
 
 class AuthenticationService:
-    def __init__(self, tenants: TenantAccountStore, owners: OwnerAccountStore, *, passwords: PasswordCodec, contractors=None):
+    def __init__(self, tenants: TenantAccountStore, owners: OwnerAccountStore, *, passwords: PasswordCodec, contractors: ContractorAccountStore | None = None):
         if (not isinstance(tenants, TenantAccountStore) or tenants.role is not AccountRole.TENANT
                 or not isinstance(owners, OwnerAccountStore) or owners.role is not AccountRole.OWNER):
             raise ValueError("Tenant and owner repositories must have the correct identity.")
