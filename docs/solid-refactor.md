@@ -1,5 +1,7 @@
 # SOLID refactor: Dependency Inversion
 
+Current status: implemented and merged through PR #15 on November 1, 2026. The pending-review wording in the dated verification section records the original handoff; current application diagrams and merge receipts are in the README and PR #19.
+
 ## The concern
 
 Lecture 5 asks for one genuine concern, a small refactor, and a PR named for the

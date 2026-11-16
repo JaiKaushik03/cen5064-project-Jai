@@ -1,6 +1,6 @@
 # ADR 006 Builder for validated maintenance requests
 
-Status: accepted for the final implementation; feature PR pending partner review.
+Status: accepted; implemented and merged through PR #19 on November 15, 2026, after partner-feedback corrections and project-owner merge authorization.
 
 ## Context
 
