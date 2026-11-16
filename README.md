@@ -319,13 +319,13 @@ sequenceDiagram
     participant DB as SQLite
     U->>UI: Mark Fixed
     alt Cancel
-        UI-->>U: close dialog; no storage change
+        UI-->>U: close dialog without changing storage
     else Submit
         UI->>S: complete(id, confirmation, cost, notes)
         S->>S: require current role and convert cost to cents
         S->>R: transact_update(Domain transformation)
         R->>DB: BEGIN IMMEDIATE and read current request
-        R->>D: check assignment when contractor; complete()
+        R->>D: check contractor assignment then complete()
         alt unchecked or already Completed
             D-->>R: ValueError
             R->>DB: rollback
