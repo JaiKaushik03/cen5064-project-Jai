@@ -547,4 +547,3 @@ These historical entries preserve the earlier README's milestone record. Stateme
 - Nov 7: Added the two verified local-application screenshots preserved at the top of this README.
 - Nov 8-9: Implemented the final owner/contractor lifecycle, safe additive migrations, photos/costs/catalog, Builder assessment, diagrams and 267-case verification; handed off PR #19 for partner review.
 - Nov 13-15: GoldLion72 reviewed PR #19. The optional contractor-store correction and ten regressions brought the suite to 277. Fresh-clone setup passed; Jai authorized merge into main at `b415c2e`, with green merged-main CI.
-- Nov 16: Restored this README's established format, original dated screenshots, inline current diagrams, detailed workflow/design sections and historical log. Compared the section coverage with the partner repository's course-template README and retained PropertyCare-specific architecture, commands, decisions and verification evidence.
