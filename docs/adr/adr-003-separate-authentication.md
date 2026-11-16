@@ -1,11 +1,11 @@
 # ADR 003: Separate authentication stores and protected legacy workspace
 
 **Date:** 2026-10-24
-**Status:** accepted by Jai; October 25 partner-feedback follow-up
+**Status:** accepted by me; October 25 partner-feedback follow-up
 
 ## Context
 
-Jai requires separate tenant/owner login, tenant signup, persistent profiles, and
+I require separate tenant/owner login, tenant signup, persistent profiles, and
 secure passwords with explicit local demo setup. Existing maintenance requests
 have no tenant identity. Showing that shared table to tenant accounts would reveal
 unrelated request data; the ownership migration and full owner portal are deferred.

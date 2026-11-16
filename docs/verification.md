@@ -216,7 +216,7 @@ The completion UI is recorded as planned work in
 The assignment explicitly allowed Completed fixtures without a completion UI, so
 no status-management subsystem was added to this PR.
 
-README credit now states that Jai directed the requirements, professor feedback,
+README credit now states that I directed the requirements, professor feedback,
 and acceptance criteria; Codex performed most of the coding, automated tests,
 implementation documentation, and technical verification; and GoldLion72 provided
 the recorded peer feedback. It does not attribute Codex execution to the student
@@ -248,7 +248,7 @@ The owner later gave a different instruction, recorded below.
 
 ## October 18: owner-authorized final integration
 
-After the partner's comments were addressed, Jai explicitly instructed Codex to
+After the partner's comments were addressed, I explicitly instructed Codex to
 merge without a second review and update the project, README, and related records.
 This supersedes the previous stop-before-merge instruction and re-review
 recommendation. It does not turn GoldLion72's COMMENTED review into APPROVED,
@@ -302,7 +302,7 @@ validation errors and prefilling login email after successful registration.
 Codex implemented both with safe form callbacks, retained password clearing on
 successful signup/login attempts/navigation/logout, and verified **173 passed,
 0 failed** plus the actual signup-correction/login flow in the in-app browser
-against isolated stores. Jai explicitly authorized merging after these corrections
+against isolated stores. I explicitly authorized merging after these corrections
 and checks. This supersedes the October 24 stop instruction; it does not turn
 the partner's comments into a formal approval. See the updated
 [authentication verification record](authentication-verification.md) and PR #13

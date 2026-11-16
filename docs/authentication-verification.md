@@ -2,8 +2,8 @@
 
 # October 24 authentication/signup verification
 
-These are Codex-executed technical checks for Jai's requirements, not a claim
-that Jai personally wrote or tested this code or that GoldLion72 approved it.
+This record covers my authentication and signup requirements. Codex executed
+the technical checks; the partner's actual review status is recorded below.
 UI work used the hidden in-app browser with DOM interactions only. No native
 desktop application, global mouse/keyboard input, or desktop takeover was used.
 
@@ -126,7 +126,7 @@ the PR description and final handoff after GitHub confirms them.
 GoldLion72 left a COMMENTED review on PR #13, recommending that signup passwords
 survive validation errors and that the new account email be prefilled on login.
 The review is not APPROVED or CHANGES_REQUESTED. No inline review threads were
-present. Jai then explicitly instructed Codex to apply the needed fixes and merge
+present. I then explicitly instructed Codex to apply the needed fixes and merge
 the PR. That newer instruction supersedes the October 24 stopping point; no peer
 approval is invented and no repository protection may be bypassed.
 

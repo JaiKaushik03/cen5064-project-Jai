@@ -20,7 +20,7 @@ Tenants sign up, log in and submit private maintenance requests with an optional
 
 **Domain owns the business rules:** unassigned Open Critical requests must be assigned before lower-priority requests; Completed requests cannot be assigned or reprioritized; completion requires explicit confirmation. Services authorize and coordinate these operations, and repositories persist their validated results.
 
-**Current implementation:** [PR #19](https://github.com/JaiKaushik03/cen5064-project-Jai/pull/19) merged into main on November 15 after Jai authorized the final merge. GoldLion72's COMMENTED review identified the contractor-store corrections, which are implemented and tested. The merged implementation passed **277 tests** locally and in [main CI](https://github.com/JaiKaushik03/cen5064-project-Jai/actions/runs/43682672132). The badge above tracks the latest push to main.
+**Current implementation:** [PR #19](https://github.com/JaiKaushik03/cen5064-project-Jai/pull/19) merged into main on November 15 after I authorized the final merge. GoldLion72's COMMENTED review identified the contractor-store corrections, which are implemented and tested. The merged implementation passed **277 tests** locally and in [main CI](https://github.com/JaiKaushik03/cen5064-project-Jai/actions/runs/43682672132). The badge above tracks the latest push to main.
 
 ## How to run
 
@@ -511,9 +511,9 @@ Lease verification, payments, actual notification delivery, profile editing, pas
 
 ## Development and verification
 
-Jai LNU set the project direction, supplied requirements and professor feedback, defined acceptance criteria and selected the full final scope. Codex performed most of the implementation, including Domain changes, service coordination, SQLite migration, Streamlit updates, automated tests and technical documentation. The [verification history](docs/verification.md), [authentication record](docs/authentication-verification.md), [tenant ownership checks](docs/tenant-request-verification.md) and [final checks](docs/final-verification.md) identify the actual checks performed.
+I set the project direction, supplied requirements and professor feedback, defined acceptance criteria and selected the full final scope. I used Codex for most of the implementation, including Domain changes, service coordination, SQLite migration, Streamlit updates, automated tests and technical documentation. The [verification history](docs/verification.md), [authentication record](docs/authentication-verification.md), [tenant ownership checks](docs/tenant-request-verification.md) and [final checks](docs/final-verification.md) identify the actual checks performed.
 
-GoldLion72's reviews informed the priority dropdown default, signup correction behavior, tenant location prefill and contractor-store typing/error handling. Their review on PR #19 covered `b728008` with COMMENTED status; the corrections were implemented in `9a0cf11`. Jai authorized the final merge. These records do not claim a formal partner approval or a second review that did not occur. The implementation PRs retain their AI-critique blocks with concrete findings and corrections.
+GoldLion72's reviews informed the priority dropdown default, signup correction behavior, tenant location prefill and contractor-store typing/error handling. Their review on PR #19 covered `b728008` with COMMENTED status; the corrections were implemented in `9a0cf11`. I authorized the final merge. These records do not claim a formal partner approval or a second review that did not occur. The implementation PRs retain their AI-critique blocks with concrete findings and corrections.
 
 ## Weekly log
 
@@ -531,12 +531,12 @@ These historical entries preserve the earlier README's milestone record. Stateme
 
 - Oct 18: Added manager priority updates, Domain-owned Completed restriction, minimal request status, safe SQLite migration, and regression coverage. Local suite: 69 passed, 0 failed. Verified both real browser workflows and restart persistence against an isolated legacy database; the initial implementation was handed off as a Draft PR before peer review.
 
-- Oct 18 partner-review follow-up: Matched the manager priority default to the selected request, added selection/rerun regression tests, clarified contribution credit, and recorded the completion UI as future Issue #10. Jai subsequently authorized merging the corrected implementation without a second review; the recorded partner review remains COMMENTED, not a formal approval.
+- Oct 18 partner-review follow-up: Matched the manager priority default to the selected request, added selection/rerun regression tests, clarified contribution credit, and recorded the completion UI as future Issue #10. I subsequently authorized merging the corrected implementation without a second review; the recorded partner review remains COMMENTED, not a formal approval.
 
-- Oct 24: Jai supplied the authentication/signup flow, fields, account separation, demo credentials, interface decisions, and future owner workflow requirements. Codex implemented the authentication slice, preserved maintenance behavior behind owner access, and performed the automated/database/browser verification. The initial handoff was an open PR for peer review; see the October 25 follow-up below.
+- Oct 24: I supplied the authentication/signup flow, fields, account separation, demo credentials, interface decisions, and future owner workflow requirements. Codex implemented the authentication slice, preserved maintenance behavior behind owner access, and performed the automated/database/browser verification. The initial handoff was an open PR for peer review; see the October 25 follow-up below.
 
 
-- Oct 25 partner-review follow-up: GoldLion72 suggested preserving signup passwords after validation errors and prefilling the login email after account creation. Codex implemented both using form callbacks, added retry/navigation/prefill regression checks, and ran all 173 tests successfully. Jai authorized merging the corrected PR after verification; the partner review remains COMMENTED, with no formal approval claimed.
+- Oct 25 partner-review follow-up: GoldLion72 suggested preserving signup passwords after validation errors and prefilling the login email after account creation. Codex implemented both using form callbacks, added retry/navigation/prefill regression checks, and ran all 173 tests successfully. I authorized merging the corrected PR after verification; the partner review remains COMMENTED, with no formal approval claimed.
 
 - Oct 30–31: Refactored authentication around service-owned account/password interfaces for Lecture 5 Dependency Inversion. Added independent in-memory tests, retained the 173-case baseline, and verified 184 passing tests plus the unchanged browser workflows. The SOLID PR is awaiting partner review.
 
@@ -546,4 +546,4 @@ These historical entries preserve the earlier README's milestone record. Stateme
 
 - Nov 7: Added the two verified local-application screenshots preserved at the top of this README.
 - Nov 8-9: Implemented the final owner/contractor lifecycle, safe additive migrations, photos/costs/catalog, Builder assessment, diagrams and 267-case verification; handed off PR #19 for partner review.
-- Nov 13-15: GoldLion72 reviewed PR #19. The optional contractor-store correction and ten regressions brought the suite to 277. Fresh-clone setup passed; Jai authorized merge into main at `b415c2e`, with green merged-main CI.
+- Nov 13-15: GoldLion72 reviewed PR #19. The optional contractor-store correction and ten regressions brought the suite to 277. Fresh-clone setup passed; I authorized merge into main at `b415c2e`, with green merged-main CI.

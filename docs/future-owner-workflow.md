@@ -1,6 +1,6 @@
 # Owner maintenance workflow
 
-Status: implemented in PR #19, including the partner-requested contractor-store corrections. Jai authorized the final merge after verification on November 15, 2026; PR #19 records its receipt and latest main CI. The filename is retained for existing links.
+Status: implemented in PR #19, including the partner-requested contractor-store corrections. I authorized the final merge after verification on November 15, 2026; PR #19 records its receipt and latest main CI. The filename is retained for existing links.
 
 Active Issues includes issue ID/title/description, property/unit, priority, submission date, tenant name/email/phone/address/unit snapshot, assignment/progress and costs. Fixed Issues preserves those fields and adds completion time/notes. Legacy missing contacts/times remain explicitly unknown.
 
