@@ -26,11 +26,11 @@ Tenants sign up, log in and submit private maintenance requests with an optional
 
 ### Accessible interface and audit follow-up (redesign branch)
 
-`design/fiu-inspired-accessible-ui` adds a navy/white interface with restrained gold accents, readable forms, keyboard focus indicators, role guidance and responsive spacing. Colors are inspired by FIU; the project has no university endorsement or official logo. All existing roles and workflows remain available. This branch is awaiting final review; it is not merged into main.
+The interface and audit follow-up in [PR #22](https://github.com/JaiKaushik03/cen5064-project-Jai/pull/22) add navy/white screens with restrained gold accents, readable forms, keyboard focus indicators, role guidance and responsive spacing. Colors are inspired by FIU; the project has no university endorsement or official logo. All existing roles and workflows remain available.
 
 - `.streamlit/config.toml` and `src/presentation/ui.py` centralize the palette, reusable feedback and history/photo presentation.
 - Histories show 25 requests per page; use each section's page-number control to access older records. Totals include all matching records, not just the visible page. Assignment pages put unassigned Critical work first.
-- Photos are retrieved only after **View photo** is selected, with authorization checked again. PNG/JPEG validation, the 2 MiB limit and the 20-million-pixel limit remain enforced.
+- Photos are retrieved only after **View photo** is selected, with authorization checked again. One validated photo is retained in session state so an unrelated action, such as completing another request, keeps the preview open. A changed request revision reloads it; logout clears it. Only photos belonging to the currently authorized history rows are displayed. PNG/JPEG validation, the 2 MiB limit and the 20-million-pixel limit remain enforced.
 - **Scheduled date** starts empty and is optional. Owners may fix unassigned work themselves; contractor start/completion still requires their own assignment. Starting work is not a prerequisite for confirmed completion.
 - Priority updates use a saved revision as well as status. A stale edit is rejected without overwriting the newer record; **Reload selected request** loads the current value for review before another save.
 - New requests allow up to 400 characters for Property / Unit, 200 for Issue title and 10,000 for Description. Existing longer historical values remain readable and unchanged during lifecycle updates.
@@ -43,7 +43,7 @@ Current audit details and evidence are in [redesign verification](docs/redesign-
 
 Captured November 21, 2026, against isolated fictional data. A [390-pixel mobile login screenshot](docs/screenshots/redesign-login-mobile.jpg) records the responsive layout.
 
-Requirements: Git and Python **3.13**. Clone and run from the repository root. To review this unmerged redesign, run `git switch design/fiu-inspired-accessible-ui` after cloning, before installing dependencies. Otherwise these commands run the current main branch.
+Requirements: Git and Python **3.13**. Clone and run from the repository root. These commands use main; when reviewing a feature branch, switch to that branch before installing its dependencies.
 
 ### Windows Command Prompt or PowerShell
 
@@ -121,7 +121,7 @@ Windows Command Prompt or PowerShell:
 .\.venv\Scripts\python.exe -m pip_audit -r requirements-dev.txt --strict --progress-spinner off
 ```
 
-On Linux/macOS substitute `.venv/bin/python`. This redesign branch passes **319 cases**: all 277 existing cases plus 42 audit regressions. The existing cases comprise the 227-case baseline, 40 final workflow checks and 10 contractor-store review regressions. Coverage includes Domain decisions, Builder products, exact costs, actual image validation, safe legacy migrations, rollback, privacy, role boundaries, account replacement, confirmation/cancellation, Streamlit form behavior, persistence, concurrent edits, bounded histories and session expiration. Current results are in [redesign verification](docs/redesign-verification.md); [final verification](docs/final-verification.md) retains the earlier milestone evidence.
+On Linux/macOS substitute `.venv/bin/python`. The full suite passes **321 cases**: all 277 existing cases plus 44 audit and photo-review regressions. The existing cases comprise the 227-case baseline, 40 final workflow checks and 10 contractor-store review regressions. Coverage includes Domain decisions, Builder products, exact costs, actual image validation, safe legacy migrations, rollback, privacy, role boundaries, account replacement, confirmation/cancellation, Streamlit form behavior, persistence, concurrent edits, bounded histories, session expiration and persistent photo previews. Current results are in [redesign verification](docs/redesign-verification.md); [final verification](docs/final-verification.md) retains the earlier milestone evidence.
 
 Contractor storage is optional when constructing the authentication service for tenant/owner-only use. Owner contractor registration, listing and assignment require a configured contractor store and raise a clear `ValueError` when it is absent. Owner authorization is checked first; normal app startup supplies the store automatically.
 

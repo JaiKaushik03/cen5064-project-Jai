@@ -391,3 +391,37 @@ def test_expiry_between_route_resolution_and_authorization_returns_to_login(flow
     assert not screen.exception
     assert screen.title[0].value == "PropertyCare"
     assert any("session ended" in error.value for error in screen.error)
+
+
+def test_open_photo_survives_other_completion_and_clears_on_logout(flow, monkeypatch):
+    photographed = flow.repo.save(request(photo=picture()))
+    other = flow.repo.save(request(title="Another repair"))
+    screen = owner_screen(flow, monkeypatch)
+    click(screen, "View photo")
+    assert len(screen.image) == 1
+    assert screen.session_state["request_photo_preview"]["photo"] == photographed.photo
+    click(screen, f"Mark Fixed #{other.id}")
+    screen.checkbox(key=f"confirm_fix_{other.id}").check()
+    click(screen, "Submit")
+    assert not screen.exception
+    assert flow.repo.get_by_id(other.id).status.value == "Completed"
+    assert len(screen.image) == 1
+    assert screen.session_state["request_photo_preview"]["id"] == photographed.id
+    click(screen, "Logout")
+    assert not screen.image
+    assert "request_photo_preview" not in screen.session_state
+
+
+def test_photo_cache_keeps_one_selection_and_refreshes_after_revision_change(flow, monkeypatch):
+    first = flow.repo.save(request(photo=picture()))
+    second = flow.repo.save(request(title="Second photo", photo=picture()))
+    screen = owner_screen(flow, monkeypatch)
+    screen.button(key=f"view_photo_{first.id}").click().run()
+    screen.button(key=f"view_photo_{second.id}").click().run()
+    assert len(screen.image) == 1
+    assert screen.session_state["request_photo_preview"]["id"] == second.id
+    assert set(screen.session_state["request_photo_preview"]) == {"id", "revision", "photo"}
+    MaintenanceRequestService(flow.repo).change_priority(second.id, "High")
+    screen.run()
+    assert not screen.exception and len(screen.image) == 1
+    assert screen.session_state["request_photo_preview"]["revision"] == 1

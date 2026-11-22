@@ -1,6 +1,6 @@
 # Accessible UI and audit follow-up
 
-Branch: `design/fiu-inspired-accessible-ui`. Target: main. Stop before merge for project-owner review.
+Branch: `design/fiu-inspired-accessible-ui`. Target: main. PR #22 contains the implementation and verification history; merge requires project-owner authorization.
 
 ## Audit changes
 
@@ -47,3 +47,11 @@ Screenshots: [owner dashboard](screenshots/redesign-owner.jpg), [mobile login](s
 ## Remaining limits
 
 This remains a local academic application: SQLite files are not encrypted at rest; sessions are held in one process; registered units do not verify a lease; no email or payment integration is implied. Keyboard/layout/contrast checks are not a complete screen-reader or WCAG certification. These limits do not remove an existing feature or bypass an audit correction.
+
+## Partner photo feedback — November 22, 2026
+
+GoldLion72's COMMENTED review of `8a814a4` identified that viewing a request photo and completing a different repair closed the preview. This was a usability correction, not a formal approval.
+
+The shared photo helper now retains one validated photo in session state and gives each expander a stable key. It only renders the cached image when the current authorized history includes that request; request revisions trigger a fresh authorized fetch, selecting another photo replaces the cache, and logout clears it. Existing View photo controls and lazy loading remain.
+
+Two additional real-screen regressions check completion without losing the preview, logout cleanup, a single bounded selection, and revision refresh. Full suite: **321 passed, 0 failed in 40.16 seconds**; Ruff and pip check passed. A live isolated owner session opened photo #3, confirmed completion of unrelated request #4, and retained the expanded image afterward. No saved application database was used.

@@ -84,14 +84,26 @@ def history_page(service, key, **filters):
 def show_photos(service, requests):
     for request in requests:
         if request.has_photo or request.photo:
-            with st.expander(f"Photo for request #{request.id}"):
-                if st.button("View photo", key=f"view_photo_{request.id}"):
+            with st.expander(f"Photo for request #{request.id}", key=f"photo_panel_{request.id}"):
+                selected = st.session_state.get("request_photo_preview")
+                opened = st.button("View photo", key=f"view_photo_{request.id}")
+                # Keep one validated photo per session, rather than one image per
+                # history row. The rows supplied here are authorized on each rerun.
+                showing = selected is not None and selected["id"] == request.id
+                if opened or (showing and selected["revision"] != request.revision):
+                    st.session_state.pop("request_photo_preview", None)
                     try:
                         photo = service.get_request(request.id)
                         if photo.photo:
                             validate_photo(photo.photo)
-                            st.image(photo.photo, caption=photo.title)
+                            st.session_state["request_photo_preview"] = {
+                                "id": photo.id, "revision": photo.revision,
+                                "photo": photo.photo,
+                            }
                         else:
                             st.info("This request no longer has a photo.")
                     except ValueError as error:
                         st.error(str(error))
+                selected = st.session_state.get("request_photo_preview")
+                if selected is not None and selected["id"] == request.id:
+                    st.image(selected["photo"], caption=request.title)
