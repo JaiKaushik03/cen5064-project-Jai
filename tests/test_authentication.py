@@ -13,9 +13,7 @@ import pytest
 
 from src.data.account_repositories import OwnerAccountRepository, TenantAccountRepository
 from src.domain.accounts import (
-    AccessDeniedError, AccountRole, DEMO_TERMS_VERSION, OwnerAccount, TenantAccount,
-    TenantProfile, TERMS_VERSION, normalize_email, normalize_phone, utc_now,
-    validate_signup_password, validate_terms,
+    AccessDeniedError, AccountRole, DEMO_TERMS_VERSION, OwnerAccount, TenantProfile, TERMS_VERSION, normalize_email, normalize_phone,
 )
 from src.services.authentication_service import AuthenticationService, INVALID_CREDENTIALS
 from src.services.demo_accounts import seed_demo_accounts

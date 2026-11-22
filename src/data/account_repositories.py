@@ -19,11 +19,11 @@ class _AccountRepository:
         self.database_path.parent.mkdir(parents=True, exist_ok=True)
         with closing(self._connect()) as connection, connection:
             connection.execute("BEGIN IMMEDIATE")
-            tables = {row[0] for row in connection.execute(
+            tables = {row[0].casefold() for row in connection.execute(
                 "SELECT name FROM sqlite_master WHERE type = 'table'"
             )}
             if (({"tenant_accounts", "owner_accounts", "contractor_accounts"} - {self.table_name}) & tables
-                    or "maintenance_requests" in tables):
+                    or {"maintenance_requests", "properties", "units"} & tables):
                 raise ValueError("Tenant, owner, contractor, and maintenance databases must be separate.")
             connection.execute(self.schema)
             self._migrate(connection)

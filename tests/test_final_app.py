@@ -1,5 +1,6 @@
 """Real Streamlit screen flows on isolated account and request databases."""
 from pathlib import Path
+from datetime import date
 import pytest
 from streamlit.testing.v1 import AppTest
 from src.data.account_repositories import TenantAccountRepository, OwnerAccountRepository
@@ -106,6 +107,7 @@ def test_owner_registers_catalog_and_contractor_and_assigns_work(screen_flow):
     screen.selectbox(key='assign_request_id').select(request.id)
     screen.selectbox(key='assign_contractor_id').select(contractor.id)
     screen.text_input(key='estimated_cost').set_value('100.25')
+    screen.date_input(key='scheduled_date').set_value(date(2026, 11, 9))
     button(screen, 'Assign work').click().run()
     assert not screen.exception
     assigned = repo.get_by_id(request.id)

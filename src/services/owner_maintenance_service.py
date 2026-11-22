@@ -1,4 +1,4 @@
-"""Guard the existing shared workspace until tenant/request ownership exists."""
+"""Authorize access to the owner's shared maintenance workspace."""
 
 from src.domain.accounts import AccountRole
 
@@ -20,10 +20,18 @@ class OwnerMaintenanceService:
         self._authorize()
         return self.maintenance.list_requests()
 
-    def change_priority(self, *args):
+    def change_priority(self, *args, **kwargs):
         self._authorize()
-        return self.maintenance.change_priority(*args)
+        return self.maintenance.change_priority(*args, **kwargs)
 
     def list_units(self):
         self._authorize()
         return self.maintenance.list_units()
+
+    def list_requests_page(self, **filters):
+        self._authorize()
+        return self.maintenance.list_requests_page(**filters)
+
+    def get_request(self, request_id):
+        self._authorize()
+        return self.maintenance.get_request(request_id)

@@ -1,7 +1,9 @@
 """Signup, separate-store login, and server-owned opaque local sessions."""
 
 import secrets
+import math
 from threading import Lock
+from time import monotonic
 
 from src.domain.accounts import (
     AccessDeniedError, AccountRole, Principal, TenantAccount, TenantProfile,
@@ -13,7 +15,11 @@ INVALID_CREDENTIALS = "Invalid email address or password."
 
 
 class AuthenticationService:
-    def __init__(self, tenants: TenantAccountStore, owners: OwnerAccountStore, *, passwords: PasswordCodec, contractors: ContractorAccountStore | None = None):
+    def __init__(self, tenants: TenantAccountStore, owners: OwnerAccountStore, *, passwords: PasswordCodec, contractors: ContractorAccountStore | None = None,
+                 session_ttl_seconds=3600, clock=monotonic):
+        if (isinstance(session_ttl_seconds, bool) or not isinstance(session_ttl_seconds, (int, float))
+                or not math.isfinite(session_ttl_seconds) or session_ttl_seconds <= 0):
+            raise ValueError("Session lifetime must be a positive number of seconds.")
         if (not isinstance(tenants, TenantAccountStore) or tenants.role is not AccountRole.TENANT
                 or not isinstance(owners, OwnerAccountStore) or owners.role is not AccountRole.OWNER):
             raise ValueError("Tenant and owner repositories must have the correct identity.")
@@ -31,6 +37,9 @@ class AuthenticationService:
         self.passwords = passwords
         self._dummy_hash = self.passwords.hash(secrets.token_urlsafe(32))
         self._sessions = {}
+        self._session_expirations = {}
+        self._session_ttl = session_ttl_seconds
+        self._clock = clock
         self._lock = Lock()
 
     def signup(self, full_name, email, phone_number, address, unit_number,
@@ -70,13 +79,16 @@ class AuthenticationService:
                               account.account_key if role in (AccountRole.TENANT, AccountRole.CONTRACTOR) else None)
         token = secrets.token_urlsafe(32)
         with self._lock:
+            self._cleanup_locked(self._clock())
             self._sessions[token] = principal
+            self._session_expirations[token] = self._clock() + self._session_ttl
         return token
 
     def resolve_session(self, token):
         if not isinstance(token, str):
             return None
         with self._lock:
+            self._cleanup_locked(self._clock())
             principal = self._sessions.get(token)
         if principal is None:
             return None
@@ -116,3 +128,16 @@ class AuthenticationService:
         if isinstance(token, str):
             with self._lock:
                 self._sessions.pop(token, None)
+                self._session_expirations.pop(token, None)
+
+    def _cleanup_locked(self, now):
+        expired = [token for token, deadline in self._session_expirations.items() if now >= deadline]
+        for token in expired:
+            self._sessions.pop(token, None)
+            self._session_expirations.pop(token, None)
+        return len(expired)
+
+    def cleanup_expired_sessions(self):
+        """Remove expired principals without extending sessions on reruns."""
+        with self._lock:
+            return self._cleanup_locked(self._clock())

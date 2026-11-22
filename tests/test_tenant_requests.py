@@ -1,7 +1,6 @@
 """Tenant ownership, scoped storage, account identity and safe legacy migrations."""
 
 from contextlib import closing
-from dataclasses import replace
 import sqlite3
 from uuid import uuid4
 

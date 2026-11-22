@@ -24,7 +24,26 @@ Tenants sign up, log in and submit private maintenance requests with an optional
 
 ## How to run
 
-Requirements: Git and Python **3.13**. Clone main and run from the repository root.
+### Accessible interface and audit follow-up (redesign branch)
+
+The interface and audit follow-up in [PR #22](https://github.com/JaiKaushik03/cen5064-project-Jai/pull/22) add navy/white screens with restrained gold accents, readable forms, keyboard focus indicators, role guidance and responsive spacing. Colors are inspired by FIU; the project has no university endorsement or official logo. All existing roles and workflows remain available.
+
+- `.streamlit/config.toml` and `src/presentation/ui.py` centralize the palette, reusable feedback and history/photo presentation.
+- Histories show 25 requests per page; use each section's page-number control to access older records. Totals include all matching records, not just the visible page. Assignment pages put unassigned Critical work first.
+- Photos are retrieved only after **View photo** is selected, with authorization checked again. One validated photo is retained in session state so an unrelated action, such as completing another request, keeps the preview open. A changed request revision reloads it; logout clears it. Only photos belonging to the currently authorized history rows are displayed. PNG/JPEG validation, the 2 MiB limit and the 20-million-pixel limit remain enforced.
+- **Scheduled date** starts empty and is optional. Owners may fix unassigned work themselves; contractor start/completion still requires their own assignment. Starting work is not a prerequisite for confirmed completion.
+- Priority updates use a saved revision as well as status. A stale edit is rejected without overwriting the newer record; **Reload selected request** loads the current value for review before another save.
+- New requests allow up to 400 characters for Property / Unit, 200 for Issue title and 10,000 for Description. Existing longer historical values remain readable and unchanged during lifecycle updates.
+- `PROPERTYCARE_SESSION_TTL_SECONDS` sets an absolute session lifetime in seconds (default `3600`). Normal reruns do not extend it. Expired sessions are removed on authentication activity or explicit cleanup; SQLite records remain.
+- Streamlit 1.67.0 permits the Pillow 13.0.0 security update. Development dependencies add Ruff and pip-audit; the app still uses Streamlit, Argon2id and SQLite.
+
+Current audit details and evidence are in [redesign verification](docs/redesign-verification.md). Earlier verification records below remain dated historical evidence.
+
+![Redesigned owner dashboard with fictional repair totals](docs/screenshots/redesign-owner.jpg)
+
+Captured November 21, 2026, against isolated fictional data. A [390-pixel mobile login screenshot](docs/screenshots/redesign-login-mobile.jpg) records the responsive layout.
+
+Requirements: Git and Python **3.13**. Clone and run from the repository root. These commands use main; when reviewing a feature branch, switch to that branch before installing its dependencies.
 
 ### Windows Command Prompt or PowerShell
 
@@ -86,7 +105,7 @@ Files are created automatically and ignored by Git. Credential files reject the 
 
 Migrations use transactions and add missing columns/tables without rebuilding existing rows or resetting IDs/sequences. Legacy requests remain owner-only when their tenant key is unknown. Missing historical snapshots stay unknown. Existing accounts are not reseeded or overwritten. Request and contractor ownership uses UUID keys so a replacement account with a reused numeric ID cannot inherit old history.
 
-Passwords use salted Argon2id. Server-side opaque sessions resolve current roles and account/store identities on each operation. Presentation guards are backed by service authorization; hiding a button is not the access check. Sessions live in one server process and expire on server restart. This is a local academic application, not a production identity or multi-server platform.
+Passwords use salted Argon2id. Server-side opaque sessions resolve current roles and account/store identities on each operation. Presentation guards are backed by service authorization; hiding a button is not the access check. Sessions live in one server process, expire after the configured lifetime, and end on server restart. Restart the server after installing dependencies or changing authentication code. This is a local academic application, not a production identity or multi-server platform.
 
 No separate database server, manual SQL, secret file or populated database download is required. Passwords use Argon2id through pinned argon2-cffi 25.1.0, with fresh salts, 64 MiB memory, three iterations and parallelism four. Password fields clear after login attempts, successful signup, navigation and logout. Failed signup retains them only in the active form until correction or navigation.
 
@@ -98,9 +117,11 @@ Windows Command Prompt or PowerShell:
 .\.venv\Scripts\python.exe -m pip install -r requirements-dev.txt
 .\.venv\Scripts\python.exe -m pytest -q
 .\.venv\Scripts\python.exe -m pip check
+.\.venv\Scripts\python.exe -m ruff check .
+.\.venv\Scripts\python.exe -m pip_audit -r requirements-dev.txt --strict --progress-spinner off
 ```
 
-On Linux/macOS substitute `.venv/bin/python`. The full suite contains **277 cases**: the 227-case baseline, 40 final workflow checks and 10 contractor-store review regressions. It covers Domain decisions, Builder products, exact costs, actual image validation, safe legacy migrations, rollback, privacy, role boundaries, account replacement, confirmation/cancellation, Streamlit form behavior and persistence. Verification results are in [final verification](docs/final-verification.md).
+On Linux/macOS substitute `.venv/bin/python`. The full suite passes **321 cases**: all 277 existing cases plus 44 audit and photo-review regressions. The existing cases comprise the 227-case baseline, 40 final workflow checks and 10 contractor-store review regressions. Coverage includes Domain decisions, Builder products, exact costs, actual image validation, safe legacy migrations, rollback, privacy, role boundaries, account replacement, confirmation/cancellation, Streamlit form behavior, persistence, concurrent edits, bounded histories, session expiration and persistent photo previews. Current results are in [redesign verification](docs/redesign-verification.md); [final verification](docs/final-verification.md) retains the earlier milestone evidence.
 
 Contractor storage is optional when constructing the authentication service for tenant/owner-only use. Owner contractor registration, listing and assignment require a configured contractor store and raise a clear `ValueError` when it is absent. Owner authorization is checked first; normal app startup supplies the store automatically.
 
@@ -416,14 +437,14 @@ Property / Unit and Issue title require non-whitespace text. Description is opti
 
 ### Manager priority-change workflow
 
-**Domain owns the Completed-request restriction.** `MaintenanceRequest.change_priority()` returns a validated replacement for Open work and rejects Completed work. Service retrieves the request and saves only after that decision succeeds.
+**Domain owns the Completed-request restriction.** `MaintenanceRequest.change_priority()` returns a validated replacement for Open work and rejects Completed work. Service retrieves the request and saves only after that decision succeeds. `MaintenanceRequestService` depends on the service-owned `MaintenanceRequestStore` Protocol; startup supplies the SQLite implementation.
 
 1. Log in as owner and choose **Open maintenance requests**.
 2. Select a request under **Manager - Change Request Priority**.
 3. **New priority** starts at that selected request's saved priority. Changing the selection loads its current value without saving.
 4. Choose an allowed priority and click **Update Priority**. Open work updates; Completed work displays the Domain error and retains the proposal/selection.
 
-The repository updates only priority with bound parameters and a status-match condition. This consistency check rejects a missing or stale record without taking ownership of the Domain rule.
+The repository updates only priority and its revision with bound parameters and status/revision-match conditions. The screen retains its loaded revision until a successful save or explicit reload, preventing older proposals and concurrent writers from silently overwriting current work. This consistency check does not take ownership of the Domain rule.
 
 ### Owner, contractor, and retained completion workflow
 

@@ -1,7 +1,6 @@
 """Authorized owner and contractor use cases; Domain owns transitions and scheduling."""
 from src.domain.accounts import AccountRole, AccessDeniedError, ContractorAccount, validate_signup_password
 from src.domain.properties import Property, Unit
-from src.domain.request_status import RequestStatus
 from src.domain.work_orders import cost_in_cents
 from src.services.authentication_ports import ContractorAccountStore
 
@@ -15,6 +14,21 @@ class OwnerWorkflowService:
     def list_requests(self):
         self._authorize()
         return self.repository.list_all()
+
+    def list_requests_page(self, **filters):
+        self._authorize()
+        return self.repository.list_page(**filters)
+
+    def get_request(self, request_id):
+        self._authorize()
+        request = self.repository.get_by_id(request_id)
+        if request is None:
+            raise ValueError("Maintenance request was not found.")
+        return request
+
+    def totals(self, **filters):
+        self._authorize()
+        return self.repository.totals(**filters)
 
     def list_properties(self):
         self._authorize()
@@ -75,6 +89,21 @@ class ContractorWorkflowService:
     def list_requests(self):
         principal = self._principal()
         return self.repository.list_for_contractor(principal.account_key)
+
+    def list_requests_page(self, **filters):
+        principal = self._principal()
+        return self.repository.list_page(**filters, contractor_key=principal.account_key)
+
+    def get_request(self, request_id):
+        principal = self._principal()
+        request = self.repository.get_for_contractor(request_id, principal.account_key)
+        if request is None:
+            raise AccessDeniedError("Assigned work was not found.")
+        return request
+
+    def totals(self):
+        principal = self._principal()
+        return self.repository.totals(contractor_key=principal.account_key)
 
     def start_work(self, request_id):
         principal = self._principal()
