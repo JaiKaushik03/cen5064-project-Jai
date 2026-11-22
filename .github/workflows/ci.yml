@@ -2,7 +2,7 @@ name: CI
 
 on:
   push:
-    branches: [main]
+    branches: [main, 'design/fiu-inspired-accessible-ui']
   pull_request:
     branches: [main, 'codex/**']
 
@@ -14,9 +14,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Check out code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7.0.1
       - name: Set up Python 3.13
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v7.1.0
         with:
           python-version: '3.13'
           cache: pip
@@ -27,3 +27,9 @@ jobs:
         run: python -m pip install -r requirements-dev.txt
       - name: Run complete tests
         run: python -m pytest -q
+      - name: Lint and static checks
+        run: python -m ruff check .
+      - name: Check dependency consistency
+        run: python -m pip check
+      - name: Audit project dependencies
+        run: python -m pip_audit -r requirements-dev.txt --strict --progress-spinner off

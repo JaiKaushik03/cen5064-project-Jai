@@ -37,6 +37,7 @@ Thumbs.db
 *.sqlite-journal
 *.sqlite3-journal
 .pytest-tmp/
+.audit-*/
 .midterm-verification/
 .streamlit/secrets.toml
 

@@ -38,6 +38,18 @@ Presentation handles widget state, form callbacks and rendering; it contains no 
 
 ## Current class relationships
 
+### November 21 redesign follow-up
+
+The four layers and existing business rules remain. `MaintenanceRequestService` now consumes `MaintenanceRequestStore` from `src/services/maintenance_ports.py`; the Data adapter implements that service-owned contract. `RequestPage` is a bounded read result owned by the service boundary. Presentation styling, feedback cleanup, paging and explicit photo loading are shared in `src/presentation/ui.py`; the native Streamlit theme lives in `.streamlit/config.toml`.
+
+An additive `revision INTEGER NOT NULL DEFAULT 0` migration preserves every existing row/ID and supports optimistic priority edits. Domain still rejects Completed changes first. Screen proposals retain the version originally displayed; SQL compares that revision during the write. Assignment, start and completion increment it too. A stale proposal is retained for the user to inspect, and an explicit reload is required before retrying.
+
+History queries omit photo BLOBs and are bounded by a page size of 25 (repository maximum 100). Separate aggregate queries calculate full-history totals. Photo access reloads one authorized request and validates its image when displayed. Workflow transactions load the selected request and the unassigned Open Critical queue rather than all historical rows/photos; the Domain still makes the assignment decision.
+
+Existing long text is hydrated through a private legacy-data path so history and workflow-only updates do not reject or truncate old content. New Builder products enforce bounded text and full image validation. Every repository constructor rejects credential/maintenance table mixing before schema changes. Owner-confirmed completion of unassigned requests remains legitimate; contractors still require an assignment to their stable account key.
+
+Sessions expire after a configurable absolute lifetime (default one hour) using a monotonic clock; reruns do not renew them. Expired entries are pruned during authentication activity or explicit cleanup. This is still a single-process local academic session system, not distributed production authentication. Registered-unit selection remains a catalog reference, not lease verification.
+
 ```mermaid
 classDiagram
     class MaintenanceRequest {

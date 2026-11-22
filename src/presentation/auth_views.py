@@ -10,6 +10,7 @@ from src.data.contractor_repository import ContractorAccountRepository
 from src.domain.accounts import AccountRole, PASSWORD_POLICY, TERMS_VERSION
 from src.services.authentication_service import AuthenticationService
 from src.services.passwords import Passwords
+from src.presentation.ui import clear_feedback
 
 PASSWORD_KEYS = ("tenant_password", "owner_password", "contractor_password", "signup_password", "signup_confirmation", "new_contractor_password")
 TERMS_TEXT = f"""### Terms and Conditions — academic demonstration
@@ -28,21 +29,32 @@ The required checkbox records acknowledgement of these demonstration terms.
 """
 
 
-@st.cache_resource(show_spinner=False)
-def authentication_service(directory):
+@st.cache_resource(show_spinner=False, max_entries=32)
+def _build_authentication(directory, session_ttl_seconds, policy_token):
     path = Path(directory)
     return AuthenticationService(
         TenantAccountRepository(path / "tenant_accounts.db"),
         OwnerAccountRepository(path / "owner_accounts.db"),
         passwords=Passwords(),
         contractors=ContractorAccountRepository(path / "contractor_accounts.db"),
+        session_ttl_seconds=session_ttl_seconds,
     )
+
+
+def authentication_service(directory, session_ttl_seconds=3600):
+    # Streamlit may reload local modules while retaining cached resources.
+    # Recreate policy objects when their classes change; never reuse old roles.
+    return _build_authentication(directory, session_ttl_seconds, (id(AuthenticationService), id(AccountRole)))
 
 
 def configured_authentication():
     default = Path(__file__).resolve().parents[2] / "data"
     directory = Path(os.environ.get("PROPERTYCARE_AUTH_DATA_DIR", str(default))).resolve()
-    return authentication_service(str(directory))
+    try:
+        lifetime = int(os.environ.get("PROPERTYCARE_SESSION_TTL_SECONDS", "3600"))
+    except ValueError:
+        raise ValueError("PROPERTYCARE_SESSION_TTL_SECONDS must be a positive whole number.") from None
+    return authentication_service(str(directory), lifetime)
 
 
 def clear_password_fields():
@@ -54,6 +66,7 @@ def clear_password_fields():
 
 def navigate(page):
     clear_password_fields()
+    clear_feedback()
     st.session_state["auth_page"] = page
     st.session_state.pop("auth_error", None)
     st.session_state.pop("auth_success", None)
@@ -88,6 +101,7 @@ def login(authentication, role):
 
 def signup(authentication):
     st.session_state.pop("auth_error", None)
+    st.session_state.pop("auth_success", None)
     try:
         account = authentication.signup(
             st.session_state.get("signup_full_name", ""),
@@ -126,8 +140,12 @@ def render_login(authentication, role):
     contractor = role is AccountRole.CONTRACTOR
     st.title("PropertyCare — Contractor Login" if contractor else ("PropertyCare — Owner Login" if owner else "PropertyCare"))
     st.caption("Contractor access" if contractor else ("Owner access" if owner else "Rental Maintenance Management System"))
+    st.markdown("### Welcome back")
+    st.write("Sign in to manage your assigned repairs." if contractor else
+             ("Sign in to review requests, manage your properties and coordinate repairs." if owner else
+              "Report a repair and follow its progress. New here? Choose Sign Up below."))
     feedback()
-    with st.form(f"{role.value}_login"):
+    with st.form(f"{role.value}_login", border=True):
         st.text_input("Email address", key=f"{role.value}_email", max_chars=254)
         st.text_input("Password", type="password", key=f"{role.value}_password", max_chars=128)
         st.form_submit_button("Login as Contractor" if contractor else ("Login as Owner" if owner else "Log In"),
@@ -143,6 +161,7 @@ def render_login(authentication, role):
 def render_signup(authentication):
     st.title("Create Your PropertyCare Account")
     st.caption("Fields marked * and terms acceptance are required. Updates and notifications are optional.")
+    st.info("Create a tenant account. Your address identifies your reported location; it does not verify a lease or register a property.")
     feedback()
     with st.expander("Read Terms and Conditions"):
         st.markdown(TERMS_TEXT)

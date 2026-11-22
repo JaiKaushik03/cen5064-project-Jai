@@ -8,6 +8,14 @@ from src.domain.work_orders import require_assignment_order, validate_photo
 from src.domain.priority import Priority
 from src.domain.request_status import RequestStatus
 
+PROPERTY_UNIT_LIMIT = 400
+TITLE_LIMIT = 200
+DESCRIPTION_LIMIT = 10000
+
+
+class ConcurrentRequestError(ValueError):
+    """The proposed edit is based on an older saved request."""
+
 
 @dataclass(frozen=True)
 class MaintenanceRequest:
@@ -37,8 +45,13 @@ class MaintenanceRequest:
     completion_notes: str = ""
     registered_unit_id: int | None = None
     photo: bytes | None = field(default=None, repr=False)
+    revision: int = field(default=0, compare=False)
+    has_photo: bool = field(default=False, compare=False, repr=False)
+    _legacy: bool = field(default=False, compare=False, repr=False)
 
     def __post_init__(self):
+        if type(self.revision) is not int or self.revision < 0:
+            raise ValueError("Request revision must be a nonnegative integer.")
         contact = (self.tenant_name, self.tenant_email, self.tenant_phone, self.tenant_address, self.tenant_unit)
         if any(value is not None for value in contact) and not all(isinstance(value, str) and value.strip() for value in contact):
             raise ValueError("Tenant contact snapshot must contain all five fields.")
@@ -59,8 +72,9 @@ class MaintenanceRequest:
                 raise ValueError("Scheduled date must be an ISO calendar date.") from None
         if self.completed_at is not None and self.status not in (RequestStatus.COMPLETED, "Completed"):
             raise ValueError("Only Completed requests can have a completion timestamp.")
-        if self.photo is not None:
+        if self.photo is not None and not self._legacy:
             validate_photo(self.photo)
+        object.__setattr__(self, "has_photo", self.photo is not None or self.has_photo)
         if self.tenant_key is not None:
             object.__setattr__(self, "tenant_key", normalize_account_key(self.tenant_key))
         for name, label in (("property_unit", "Property / Unit"), ("title", "Issue title")):
@@ -71,6 +85,14 @@ class MaintenanceRequest:
         if not isinstance(self.description, str):
             raise ValueError("Description must be text.")
         object.__setattr__(self, "description", self.description.strip())
+        # Historic text remains readable and survives workflow-only updates.
+        # New requests are always built with the normal, bounded constructor.
+        if not self._legacy:
+            for name, label, limit in (("property_unit", "Property / Unit", PROPERTY_UNIT_LIMIT),
+                                       ("title", "Issue title", TITLE_LIMIT),
+                                       ("description", "Description", DESCRIPTION_LIMIT)):
+                if len(getattr(self, name)) > limit:
+                    raise ValueError(f"{label} must be at most {limit} characters.")
         try:
             object.__setattr__(self, "priority", Priority(self.priority))
         except (ValueError, TypeError) as error:
@@ -87,6 +109,8 @@ class MaintenanceRequest:
         key = normalize_account_key(contractor_key)
         if not isinstance(contractor_name, str) or not contractor_name.strip():
             raise ValueError("Contractor name is required.")
+        if len(contractor_name.strip()) > 100:
+            raise ValueError("Contractor name must be at most 100 characters.")
         return replace(self, assigned_contractor_key=key, assigned_contractor_name=contractor_name.strip(),
                        assigned_at=utc_now(), estimated_cost_cents=estimate, scheduled_for=scheduled_for)
 

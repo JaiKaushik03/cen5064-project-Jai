@@ -36,3 +36,7 @@ class TenantMaintenanceService:
     def list_units(self):
         self._tenant()
         return self.repository.list_units()
+
+    def list_requests_page(self, **filters):
+        tenant = self._tenant()
+        return self.repository.list_page(**filters, tenant_key=tenant.account_key)
