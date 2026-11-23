@@ -72,6 +72,56 @@ Tenants sign up, log in and submit private maintenance requests with an optional
 
 ## How to run
 
+### Quick start — run the latest main version (recommended)
+
+**Important:** GitHub hosts this project's source code, not a live PropertyCare website. `127.0.0.1` and `localhost` refer to **your own computer**. Opening an old browser tab on port 8501 may show an older Streamlit process, even if the GitHub repository is current. These instructions use **port 8502** explicitly to avoid the previous 8501 instance; always open the matching URL. If 8502 is already in use, stop the program using that port before retrying rather than opening the old 8501 page.
+
+Requirements: **Git** and **Python 3.13**. Run commands from the repository root. Runtime SQLite files in `data/` are not tracked by Git; updating source code does not require deleting those files.
+
+#### Windows — first-time setup (Command Prompt or PowerShell)
+
+```bat
+git clone https://github.com/JaiKaushik03/cen5064-project-Jai.git
+cd cen5064-project-Jai
+git pull --ff-only origin main
+py -3.13 -m venv .venv
+.\.venv\Scripts\python.exe -m pip install -r requirements.txt
+.\.venv\Scripts\python.exe -m scripts.seed_demo_accounts --local-demo
+.\.venv\Scripts\python.exe -m streamlit run app.py --server.address 127.0.0.1 --server.port 8502
+```
+
+Open **http://127.0.0.1:8502**. Keep the terminal running while using PropertyCare. The initial login screen has separate **Sign Up**, **Login as Owner** and **Login as Contractor** options; the expanded owner/contractor screens appear **after login**, not on the public landing screen.
+
+#### Windows — update an existing clone to current main
+
+Stop the currently running Streamlit command with **Ctrl+C** in its terminal. Open a new terminal in **your existing PropertyCare repository root** (the folder containing `app.py`), then run:
+
+```bat
+git status -sb
+git switch main
+git pull --ff-only origin main
+.\.venv\Scripts\python.exe -m pip install -r requirements.txt
+.\.venv\Scripts\python.exe -m streamlit run app.py --server.address 127.0.0.1 --server.port 8502
+```
+
+If `git status -sb` shows local uncommitted changes, review/preserve those changes before switching or pulling; **do not** use `git reset --hard` or delete your `data/` databases. If the virtual environment does not exist, first run `py -3.13 -m venv .venv`. For fictional demo accounts, run `.\.venv\Scripts\python.exe -m scripts.seed_demo_accounts --local-demo` once as needed; the seeder does not overwrite existing accounts.
+
+#### Linux or macOS — first-time setup
+
+```bash
+git clone https://github.com/JaiKaushik03/cen5064-project-Jai.git
+cd cen5064-project-Jai
+git pull --ff-only origin main
+python3.13 -m venv .venv
+.venv/bin/python -m pip install -r requirements.txt
+.venv/bin/python -m scripts.seed_demo_accounts --local-demo
+.venv/bin/python -m streamlit run app.py --server.address 127.0.0.1 --server.port 8502
+```
+
+For an existing Linux/macOS checkout, stop its running server, run `git status -sb` followed by `git switch main` and `git pull --ff-only origin main` after ensuring local work is preserved, reinstall requirements if needed, and launch with the same explicit `--server.port 8502` command.
+
+If Streamlit asks for an onboarding email, press Enter. To stop the app, press **Ctrl+C**. Always use **http://127.0.0.1:8502** for these instructions; if your browser shows an older tab at `localhost:8501`, close that tab and open the new URL. Use **Ctrl+Shift+R** to force-reload the page if needed. Invoking the virtual environment's Python directly avoids shell activation issues.
+
 ### Accessible interface and audit follow-up (merged into main)
 
 The merged interface and audit follow-up in [PR #22](https://github.com/JaiKaushik03/cen5064-project-Jai/pull/22) add navy/white screens with restrained gold accents, readable forms, keyboard focus indicators, role guidance and responsive spacing. Colors are inspired by FIU; the project has no university endorsement or official logo. All existing roles and workflows remain available.
@@ -88,32 +138,6 @@ The merged interface and audit follow-up in [PR #22](https://github.com/JaiKaush
 Current audit details and evidence are in [redesign verification](docs/redesign-verification.md). Earlier verification records below remain dated historical evidence.
 
 The current screenshots are at the top of this README. The [November 21 owner capture](docs/screenshots/redesign-owner.jpg) and [390-pixel mobile login capture](docs/screenshots/redesign-login-mobile.jpg) remain available as dated evidence.
-
-Requirements: Git and Python **3.13**. Clone and run from the repository root. These commands use main; when reviewing a feature branch, switch to that branch before installing its dependencies.
-
-### Windows Command Prompt or PowerShell
-
-```bat
-git clone https://github.com/JaiKaushik03/cen5064-project-Jai.git
-cd cen5064-project-Jai
-py -3.13 -m venv .venv
-.\.venv\Scripts\python.exe -m pip install -r requirements.txt
-.\.venv\Scripts\python.exe -m scripts.seed_demo_accounts --local-demo
-.\.venv\Scripts\python.exe -m streamlit run app.py --server.address 127.0.0.1
-```
-
-Open **http://localhost:8501** while the server runs. If Streamlit asks for an onboarding email, press Enter. Stop with **Ctrl+C** and restart with the same Streamlit command. Calling the environment's Python directly works in both shells without activation or an execution-policy change.
-
-### Linux or macOS
-
-```bash
-git clone https://github.com/JaiKaushik03/cen5064-project-Jai.git
-cd cen5064-project-Jai
-python3.13 -m venv .venv
-.venv/bin/python -m pip install -r requirements.txt
-.venv/bin/python -m scripts.seed_demo_accounts --local-demo
-.venv/bin/python -m streamlit run app.py --server.address 127.0.0.1
-```
 
 ### Local accounts and explicit demo setup
 
@@ -545,7 +569,7 @@ GitHub Actions uses Python 3.13 and runs the complete suite on pushes to `main` 
 
 ## Demo
 
-1. Run the explicit local-demo setup, start Streamlit, and open http://localhost:8501.
+1. Run the explicit local-demo setup, start Streamlit, and open http://127.0.0.1:8502.
 2. Log in as Tenant 1, open **My maintenance requests**, and submit one Critical and one Low request. Show validation retention, success/reset, optional photo/unit and the saved contact snapshot.
 3. Log out and log in as Tenant 2. Tenant 1's history is absent.
 4. Log in as owner. Inspect Active Issues and the contact snapshots; register a property/unit and create a contractor if needed.
