@@ -2,11 +2,59 @@
 
 ## Tested screenshots
 
-Captured from the running local application on **November 7, 2026**, using fictional demo accounts. These are the original login and tenant-submission screenshots, restored to the README. They show the earlier authentication/private-request milestone; the inline diagrams and workflow descriptions below document the completed application on main.
+Captured from the running application on **November 22, 2026**, using an isolated SQLite database and fictional accounts. These screenshots show the current interface on main; no saved personal requests or real tenant details were used.
+
+![Current PropertyCare login screen](docs/screenshots/current-login.jpg)
+
+![Current owner dashboard with fictional repair totals and active requests](docs/screenshots/current-owner.jpg)
+
+<details>
+<summary>More current application screenshots: tenant, owner and contractor workflows</summary>
+
+**Tenant request form:** required fields are marked with `*`; Description, registered-unit selection and photo are optional.
+
+![Tenant request form and required-field indicators](docs/screenshots/current-tenant.jpg)
+
+**Successful submission:** request #5 is saved, confirmation remains visible and the history count increases. The form clears and Priority returns to Medium; validation failures preserve input.
+
+![Successful request submission and saved-history confirmation](docs/screenshots/current-submission.jpg)
+
+**Property catalog:** owners register properties and units and inspect unit-specific history. A catalog reference does not verify a tenant's lease.
+
+![Owner property registration and fictional property catalog](docs/screenshots/current-properties.jpg)
+
+**Work assignment:** choose a request and contractor, enter an estimate and optionally a date. Unassigned Open Critical requests take precedence.
+
+![Owner assignment controls with optional scheduling](docs/screenshots/current-assignment.jpg)
+
+**Contractor workspace:** only the authenticated contractor's assigned work is listed, with its costs and progress controls.
+
+![Contractor dashboard showing assigned work only](docs/screenshots/current-contractor.jpg)
+
+**Completion confirmation:** Mark Fixed requires explicit confirmation and an actual cost; notes are optional. Cancel changes nothing, and completed work remains in history.
+
+![Mark Fixed confirmation dialog](docs/screenshots/current-completion.jpg)
+
+**Photo-preview correction:** this November 22 isolated test shows a validated fixture image remaining open after a different request was completed. The blue image is a test fixture, not a real repair photo.
+
+![Retained photo preview after another request is completed](docs/screenshots/current-photo-preview.jpg)
+
+**Responsive login:** the November 21 capture records the current interface at a 390-pixel mobile width.
+
+![Mobile login layout](docs/screenshots/redesign-login-mobile.jpg)
+
+</details>
+
+<details>
+<summary>Original screenshots — November 7 milestone</summary>
+
+These original images are retained as dated evidence of the earlier authentication and private-request milestone.
 
 ![PropertyCare login screen - November 7 milestone](docs/screenshots/login.png)
 
 ![Fictional tenant maintenance request saved - November 7 milestone](docs/screenshots/tenant-request.png)
+
+</details>
 
 [![CI](https://github.com/JaiKaushik03/cen5064-project-Jai/actions/workflows/ci.yml/badge.svg?branch=main&event=push)](https://github.com/JaiKaushik03/cen5064-project-Jai/actions/workflows/ci.yml)
 
@@ -20,13 +68,13 @@ Tenants sign up, log in and submit private maintenance requests with an optional
 
 **Domain owns the business rules:** unassigned Open Critical requests must be assigned before lower-priority requests; Completed requests cannot be assigned or reprioritized; completion requires explicit confirmation. Services authorize and coordinate these operations, and repositories persist their validated results.
 
-**Current implementation:** [PR #19](https://github.com/JaiKaushik03/cen5064-project-Jai/pull/19) merged into main on November 15 after I authorized the final merge. GoldLion72's COMMENTED review identified the contractor-store corrections, which are implemented and tested. The merged implementation passed **277 tests** locally and in [main CI](https://github.com/JaiKaushik03/cen5064-project-Jai/actions/runs/43682672132). The badge above tracks the latest push to main.
+**Current implementation:** [PR #22](https://github.com/JaiKaushik03/cen5064-project-Jai/pull/22) is merged into main at `7c11972`. It adds the accessible interface, concurrency and storage safeguards, paged histories, session expiry and the partner-requested photo-preview correction. The current implementation passed **321 tests, 0 failed** in a fresh-clone virtual environment (52.87 seconds) and has [green main CI](https://github.com/JaiKaushik03/cen5064-project-Jai/actions/runs/45020937866). The badge above tracks subsequent main pushes. The earlier 277-test milestone and its review history remain documented below.
 
 ## How to run
 
-### Accessible interface and audit follow-up (redesign branch)
+### Accessible interface and audit follow-up (merged into main)
 
-The interface and audit follow-up in [PR #22](https://github.com/JaiKaushik03/cen5064-project-Jai/pull/22) add navy/white screens with restrained gold accents, readable forms, keyboard focus indicators, role guidance and responsive spacing. Colors are inspired by FIU; the project has no university endorsement or official logo. All existing roles and workflows remain available.
+The merged interface and audit follow-up in [PR #22](https://github.com/JaiKaushik03/cen5064-project-Jai/pull/22) add navy/white screens with restrained gold accents, readable forms, keyboard focus indicators, role guidance and responsive spacing. Colors are inspired by FIU; the project has no university endorsement or official logo. All existing roles and workflows remain available.
 
 - `.streamlit/config.toml` and `src/presentation/ui.py` centralize the palette, reusable feedback and history/photo presentation.
 - Histories show 25 requests per page; use each section's page-number control to access older records. Totals include all matching records, not just the visible page. Assignment pages put unassigned Critical work first.
@@ -39,9 +87,7 @@ The interface and audit follow-up in [PR #22](https://github.com/JaiKaushik03/ce
 
 Current audit details and evidence are in [redesign verification](docs/redesign-verification.md). Earlier verification records below remain dated historical evidence.
 
-![Redesigned owner dashboard with fictional repair totals](docs/screenshots/redesign-owner.jpg)
-
-Captured November 21, 2026, against isolated fictional data. A [390-pixel mobile login screenshot](docs/screenshots/redesign-login-mobile.jpg) records the responsive layout.
+The current screenshots are at the top of this README. The [November 21 owner capture](docs/screenshots/redesign-owner.jpg) and [390-pixel mobile login capture](docs/screenshots/redesign-login-mobile.jpg) remain available as dated evidence.
 
 Requirements: Git and Python **3.13**. Clone and run from the repository root. These commands use main; when reviewing a feature branch, switch to that branch before installing its dependencies.
 
@@ -451,7 +497,7 @@ The repository updates only priority and its revision with bound parameters and 
 The **Owner Dashboard** contains Active Issues and Fixed Issues with request details, tenant contact snapshots, priorities, original submission times, assignment/progress, estimated/actual costs and completion times. Older rows with no verified contact information display **Unavailable (legacy/unassigned)**. Older Completed fixtures may have no known completion time; no timestamp or contact history is invented.
 
 - **Manage properties and units:** register a property and its units. Duplicate registrations are rejected. Select a registered unit to see its maintenance history and repair costs.
-- **Manage contractors and assignments:** create contractor credentials, select an unassigned request and contractor, enter an estimate and scheduled date, then Assign work.
+- **Manage contractors and assignments:** create contractor credentials, select an unassigned request and contractor, enter an estimate and an optional scheduled date, then Assign work.
 - **Critical-first rule:** an unassigned, Open Critical request must be assigned before any lower-priority request. The Domain decides this rule inside a serialized SQLite read/decision/write transaction. Assigning Completed or already assigned work is rejected without changing storage.
 - **Contractor Dashboard:** displays only the signed-in contractor's assigned requests. Start work records progress; Mark Fixed records completion. Another contractor's account or ID cannot access or complete that work. Owners retain oversight of the shared maintenance portfolio.
 - **Mark Fixed:** opens a dialog with a required confirmation checkbox, actual repair cost and optional completion notes. Submit without confirmation is rejected. Cancel leaves the stored request unchanged. Success moves the row to Fixed Issues while preserving its ID, original details, contact snapshot, photo and submission time, and adds a completion time. No deletion occurs.
@@ -493,6 +539,8 @@ The ADR template and worked example remain course references and are not counted
 
 ## CI
 
+The current workflow also runs **Ruff**, **pip check** and a **strict pip-audit**, with no ignored advisory IDs. [PR #22](https://github.com/JaiKaushik03/cen5064-project-Jai/pull/22) records the 321-test implementation and photo correction; the [merged-main run](https://github.com/JaiKaushik03/cen5064-project-Jai/actions/runs/45020937866) passed. See [redesign verification](docs/redesign-verification.md) for the dated migration, browser and audit checks.
+
 GitHub Actions uses Python 3.13 and runs the complete suite on pushes to `main` and PRs targeting `main` or `codex/**`. The badge near the top shows the latest main-push result. [PR #19](https://github.com/JaiKaushik03/cen5064-project-Jai/pull/19) records the partner correction, clean-clone test and merge receipts; [final verification](docs/final-verification.md) preserves the dated checks and manual-browser limits.
 
 ## Demo
@@ -501,7 +549,7 @@ GitHub Actions uses Python 3.13 and runs the complete suite on pushes to `main` 
 2. Log in as Tenant 1, open **My maintenance requests**, and submit one Critical and one Low request. Show validation retention, success/reset, optional photo/unit and the saved contact snapshot.
 3. Log out and log in as Tenant 2. Tenant 1's history is absent.
 4. Log in as owner. Inspect Active Issues and the contact snapshots; register a property/unit and create a contractor if needed.
-5. Attempt to assign Low while Critical is unassigned. Show the Domain rejection; then assign Critical with an estimate and scheduled date.
+5. Attempt to assign Low while Critical is unassigned. Show the Domain rejection; then assign Critical with an estimate and an optional scheduled date.
 6. Log in as that contractor. Show only assigned work and use **Start work**.
 7. Use **Mark Fixed**. Reject unchecked confirmation, try Cancel, then confirm with actual cost/notes. Show the same retained request in Fixed Issues.
 8. As owner, attempt to change the Completed request's priority and show the Domain rejection. Inspect unit history, costs and retained photo.
@@ -529,12 +577,15 @@ Lease verification, payments, actual notification delivery, profile editing, pas
 | Tenant-owned submission and history | Implemented; prefill feedback addressed | [Issue #16](https://github.com/JaiKaushik03/cen5064-project-Jai/issues/16), [PR #17](https://github.com/JaiKaushik03/cen5064-project-Jai/pull/17) |
 | Full owner/contractor workflow and retained completion | Implemented and merged | [Issue #1](https://github.com/JaiKaushik03/cen5064-project-Jai/issues/1), [Issue #10](https://github.com/JaiKaushik03/cen5064-project-Jai/issues/10), [PR #19](https://github.com/JaiKaushik03/cen5064-project-Jai/pull/19) |
 | Five-pattern assessment and Builder | Implemented and merged | [Issue #18](https://github.com/JaiKaushik03/cen5064-project-Jai/issues/18), [pattern map](docs/pattern-map.md) |
+| Accessible interface, audit corrections and retained photo preview | Implemented and merged; 321 tests | [Issue #21](https://github.com/JaiKaushik03/cen5064-project-Jai/issues/21), [PR #22](https://github.com/JaiKaushik03/cen5064-project-Jai/pull/22) |
 
 ## Development and verification
 
 I set the project direction, supplied requirements and professor feedback, defined acceptance criteria and selected the full final scope. I used Codex for most of the implementation, including Domain changes, service coordination, SQLite migration, Streamlit updates, automated tests and technical documentation. The [verification history](docs/verification.md), [authentication record](docs/authentication-verification.md), [tenant ownership checks](docs/tenant-request-verification.md) and [final checks](docs/final-verification.md) identify the actual checks performed.
 
 GoldLion72's reviews informed the priority dropdown default, signup correction behavior, tenant location prefill and contractor-store typing/error handling. Their review on PR #19 covered `b728008` with COMMENTED status; the corrections were implemented in `9a0cf11`. I authorized the final merge. These records do not claim a formal partner approval or a second review that did not occur. The implementation PRs retain their AI-critique blocks with concrete findings and corrections.
+
+GoldLion72 also identified the maintenance-service dependency-inversion concern in November 16 issue #21 and the photo-preview usability correction in the COMMENTED review of `8a814a4` on PR #22. The merged correction retains one authorized, revision-aware photo preview across unrelated actions and clears it on logout. These records credit the actual feedback without claiming an approval that did not occur.
 
 ## Weekly log
 
@@ -568,3 +619,7 @@ These historical entries preserve the earlier README's milestone record. Stateme
 - Nov 7: Added the two verified local-application screenshots preserved at the top of this README.
 - Nov 8-9: Implemented the final owner/contractor lifecycle, safe additive migrations, photos/costs/catalog, Builder assessment, diagrams and 267-case verification; handed off PR #19 for partner review.
 - Nov 13-15: GoldLion72 reviewed PR #19. The optional contractor-store correction and ten regressions brought the suite to 277. Fresh-clone setup passed; I authorized merge into main at `b415c2e`, with green merged-main CI.
+
+- Nov 16: Partner issue #21 identified a concrete maintenance-repository dependency; the follow-up moved the storage contract into the Service layer.
+- Nov 21–22: PR #22 delivered the accessible interface, revision-based concurrency protection, SQL pagination, lazy photos, optional scheduling, session expiry, database separation checks and dependency/security updates. The photo-preview review correction brought the suite to 321 tests; merged-main CI passed.
+- Nov 22 documentation follow-up: Refreshed the README with current tenant, owner, contractor, assignment, completion and photo-preview screenshots, using isolated fictional data. Preserved the existing layout, diagrams and dated milestone images.
